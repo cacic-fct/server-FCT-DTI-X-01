@@ -1,4 +1,41 @@
 ---
+- name: Validate GitHub deployment telemetry configuration
+  ansible.builtin.assert:
+    that:
+      - ansible_pull_deployment_telemetry_wrapper_path | length > 0
+      - ansible_pull_deployment_telemetry_repo_url is match('^(https://github\\.com/|git@github\\.com:).+/.+(\\.git)?$')
+      - ansible_pull_deployment_telemetry_ref | length > 0
+      - ansible_pull_deployment_telemetry_environment | length > 0
+      - ansible_pull_deployment_telemetry_token_helper_path | length > 0
+      - ansible_pull_deployment_telemetry_app_private_key_path | length > 0
+      - >-
+        (ansible_pull_deployment_telemetry_app_id | default('', true) | string | length > 0) or
+        (ansible_pull_deployment_telemetry_app_slug | default('', true) | string | length > 0)
+    fail_msg: >-
+      GitHub deployment telemetry is enabled but not fully configured. Disable
+      ansible_pull_deployment_telemetry_enabled or configure the GitHub App
+      token helper, app id/slug, private key, repository, ref, and environment.
+  when: ansible_pull_deployment_telemetry_enabled | bool
+
+- name: Ensure ansible-pull helper directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_pull_deployment_telemetry_wrapper_path | dirname }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when: ansible_pull_deployment_telemetry_enabled | bool
+
+- name: Install GitHub deployment telemetry ansible-pull wrapper
+  ansible.builtin.copy:
+    src: github-deployment-telemetry-ansible-pull.py
+    dest: "{{ ansible_pull_deployment_telemetry_wrapper_path }}"
+    owner: root
+    group: root
+    mode: "0755"
+  notify: Restart ansible-pull timer
+  when: ansible_pull_deployment_telemetry_enabled | bool
+
 - name: Install ansible-pull service
   ansible.builtin.template:
     src: ansible-pull-fct-dti-x-01.service.j2

@@ -54,6 +54,26 @@ jobs:
       - name: Validate Ansible syntax
         run: ansible-playbook --syntax-check site.yml
 
+      - name: Validate Python helpers
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import py_compile
+          import sys
+
+          failed = False
+          for path in sorted(Path(".").rglob("*.py")):
+              if ".git" in path.parts:
+                  continue
+              try:
+                  py_compile.compile(str(path), doraise=True)
+              except py_compile.PyCompileError as exc:
+                  failed = True
+                  print(exc.msg, file=sys.stderr)
+          if failed:
+              sys.exit(1)
+          PY
+
       - name: Run ansible-lint
         run: ansible-lint --profile min
 
@@ -61,10 +81,13 @@ jobs:
         run: ./scripts/validate-compose-config.sh
 
   promote-production:
-    name: Promote main to production
+    name: Promote main to production branch
     runs-on: ubuntu-latest
     needs: validate
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    concurrency:
+      group: production-promotion
+      cancel-in-progress: false
     permissions:
       contents: write
     steps:

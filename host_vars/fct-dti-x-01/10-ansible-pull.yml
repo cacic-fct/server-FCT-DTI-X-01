@@ -5,3 +5,10 @@ ansible_pull_checkout: /opt/ansible-pull/server-FCT-DTI-X-01
 ansible_pull_inventory: "{{ ansible_pull_checkout }}/inventory/hosts.yml"
 ansible_pull_playbook: site.yml
 ansible_pull_calendar: "*-*-* 06,18:00:00"
+ansible_pull_deployment_telemetry_enabled: true
+ansible_pull_deployment_telemetry_environment_url: "{{ server_docs_url }}"
+ansible_pull_deployment_telemetry_token_helper_path: "{{ server_secrets_github_app_token_helper_path }}"
+ansible_pull_deployment_telemetry_app_id: "{{ server_secrets_github_app_id | default('') }}"
+ansible_pull_deployment_telemetry_app_slug: "{{ server_secrets_github_app_slug | default('') }}"
+ansible_pull_deployment_telemetry_app_installation_id: "{{ server_deployments_github_app_installation_id | default(server_secrets_github_app_installation_id | default('')) }}"
+ansible_pull_deployment_telemetry_app_private_key_path: "{{ server_secrets_github_app_private_key_path }}"

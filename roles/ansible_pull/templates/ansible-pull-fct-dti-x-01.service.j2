@@ -9,4 +9,8 @@ Type=oneshot
 EnvironmentFile=/etc/ansible-pull/fct-dti-x-01.env
 WorkingDirectory=/opt/ansible-pull
 ExecStartPre=/usr/bin/ansible-galaxy collection install community.docker
+{% if ansible_pull_deployment_telemetry_enabled | bool %}
+ExecStart={{ ansible_pull_deployment_telemetry_wrapper_path }}
+{% else %}
 ExecStart=/usr/bin/ansible-pull --url ${ANSIBLE_PULL_REPO} --checkout ${ANSIBLE_PULL_VERSION} --directory ${ANSIBLE_PULL_CHECKOUT} --clean --inventory ${ANSIBLE_PULL_INVENTORY} ${ANSIBLE_PULL_PLAYBOOK}
+{% endif %}
