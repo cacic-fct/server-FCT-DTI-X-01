@@ -1,67 +1,54 @@
 # FCT-DTI-X-01
 
-Este repositório é a fonte de verdade da configuração do servidor Debian
-`FCT-DTI-X-01`. Ele instala a base do sistema, Docker, `ansible-pull` e os
-stacks Docker Compose que rodam em `/home/shared`.
+Este repositório é a fonte de verdade da configuração do servidor Debian `FCT-DTI-X-01`.
 
-Depois do primeiro bootstrap, o próprio servidor reaplica este repositório todos
-os dias às 06:00 e às 18:00 pelo timer
-`ansible-pull-fct-dti-x-01.timer`.
+Ele instala e mantém:
 
-O servidor não acompanha a `main` diretamente. Os arquivos são validados e
-promovidos automaticamente para `production`, que é a branch de deploy e não
-deve ser alterada manualmente.
+- Base do sistema Debian;
+- Docker e Docker Compose;
+- `ansible-pull`;
+- Stacks Docker Compose em `/home/shared`;
+- Configuração pública versionada;
+- Overlays e segredos vindos do repositório privado.
 
-## O que este repositório gerencia
+Depois do bootstrap inicial, o próprio servidor reaplica este repositório automaticamente todos os dias às **06:00** e **18:00** pelo timer:
 
-- Sistema base: pacotes, atualizações automáticas, memória, mensagens de login,
-  política de acesso e firewall.
-- Docker: repositório APT oficial, pacotes e serviço.
-- `ansible-pull`: checkout em `/opt/ansible-pull/server-FCT-DTI-X-01` e units
-  systemd para reaplicação periódica.
-- Compose público: arquivos versionados em `docker-compose/`.
-- Configuração pública de dados: arquivos versionados em `docker-data/`.
-- Overlays de projetos externos: arquivos em `compose-overlays/`.
-- Segredos: arquivos vindos do repositório privado companheiro, copiados por
-  cima da árvore pública antes da validação e do deploy.
+```bash
+ansible-pull-fct-dti-x-01.timer
+```
 
-O playbook principal é `site.yml`. O inventário é local e fica em
-`inventory/hosts.yml`. O host de inventário usa o hostname real do servidor,
-`SECOMPP`, para funcionar com o limite implícito do `ansible-pull`; a
-nomenclatura interna e os arquivos de perfil continuam como `FCT-DTI-X-01`.
+**O servidor não faz deploy direto da branch `main`**.
+A branch de deploy é `production`, promovida automaticamente pelo GitHub Actions após validação.
 
-## Estrutura rápida
+Não altere `production` manualmente.
 
-- `host_vars/fct-dti-x-01/00-server.yml`: identidade do servidor, caminhos base
-  e contas humanas esperadas.
-- `host_vars/fct-dti-x-01/10-ansible-pull.yml`: origem, branch, checkout e
-  agenda do `ansible-pull`.
-- `host_vars/fct-dti-x-01/20-packages.yml`: pacotes obrigatórios e opcionais.
-- `host_vars/fct-dti-x-01/30-firewall.yml`: portas públicas e redes autorizadas
-  para SSH/ICMP.
-- `host_vars/fct-dti-x-01/50-secrets.yml`: repositório privado de segredos e
-  autenticação via GitHub App.
-- `host_vars/fct-dti-x-01/60-compose-storage.yml`: diretórios e arquivos de
-  estado persistente em `/home/shared/docker-data`.
-- `host_vars/fct-dti-x-01/70-compose-networking.yml`: redes Docker externas.
-- `host_vars/fct-dti-x-01/80-compose-repositories.yml`: projetos que precisam
-  continuar como checkouts Git no servidor.
-- `host_vars/fct-dti-x-01/90-compose-projects.yml`: lista dos projetos Compose
-  aplicados e flags conservadoras de transição.
-- `roles/`: implementação das tarefas Ansible.
-- `docs/compose-inventory.md`: inventário dos Compose migrados do servidor.
+| Quero...                                     | Leia                                                                |
+| -------------------------------------------- | ------------------------------------------------------------------- |
+| Preparar o servidor pela primeira vez        | [Primeira execução](#primeira-execução)                             |
+| Entender como o deploy funciona              | [Fluxo de deploy](#fluxo-de-deploy)                                 |
+| Aplicar ou verificar mudanças no dia a dia   | [Operação diária](#operação-diária)                                 |
+| Saber onde colocar Compose, dados e segredos | [Onde colocar cada coisa](#onde-colocar-cada-coisa)                 |
+| Adicionar um novo stack Compose              | [Como adicionar um stack Compose](#como-adicionar-um-stack-compose) |
+| Remover um stack Compose                     | [Como remover um stack Compose](#como-remover-um-stack-compose)     |
+| Ver comandos de emergência ou de diagnóstico | [Comandos úteis](#comandos-úteis)                                   |
 
-## Primeira execução, passo a passo
+## Estrutura importante
 
-Este roteiro assume que você está logado no servidor `FCT-DTI-X-01` com um
-usuário que consegue usar `sudo`.
+```text
+site.yml                         Playbook principal
+inventory/hosts.yml              Inventário local
+host_vars/fct-dti-x-01/           Configuração do servidor
+roles/                            Tarefas Ansible
+docker-compose/                   Stacks Compose públicos
+docker-data/                      Configuração pública persistente
+compose-overlays/                 Overlays de projetos externos
+```
 
-### 1. Confirme acesso antes de mexer
+## Primeira execução
 
-Abra uma sessão SSH e mantenha outra sessão ou console de recuperação disponível
-enquanto aplica a primeira vez. A política IPv4 do firewall começa desligada
-por segurança, mas a primeira execução ainda mexe em pacotes, Docker, Compose e
-systemd.
+Logue no servidor com um usuário que possa usar `sudo`.
+
+### 1. Mantenha acesso de recuperação
 
 Confirme que existe pelo menos uma chave SSH de usuário não-root:
 
@@ -69,12 +56,9 @@ Confirme que existe pelo menos uma chave SSH de usuário não-root:
 find /home -path '*/.ssh/authorized_keys' -type f -print
 ```
 
-O hardening de SSH falha de propósito se não houver chave em
-`/home/*/.ssh/authorized_keys`.
+Se não houver chave, o hardening de SSH falha de propósito, para evitar que os usuários fiquem trancados, sem acesso.
 
-### 2. Baixe este repositório no servidor
-
-Use um diretório temporário qualquer. Exemplo:
+### 2. Clone o repositório
 
 ```bash
 cd /tmp
@@ -82,14 +66,13 @@ git clone https://github.com/cacic-fct/server-FCT-DTI-X-01.git
 cd server-FCT-DTI-X-01
 ```
 
-Se estiver testando uma branch diferente da `main`, exporte `BRANCH` antes do
-bootstrap:
+Para testar outra branch:
 
 ```bash
 export BRANCH=nome-da-branch
 ```
 
-### 3. Prepare a chave do GitHub App de segredos
+### 3. Instale a chave do GitHub App de segredos
 
 O repositório privado de segredos é:
 
@@ -97,40 +80,26 @@ O repositório privado de segredos é:
 https://github.com/cacic-fct/server-FCT-DTI-X-01-secrets.git
 ```
 
-Antes de rodar o Ansible, coloque a chave privada do GitHub App no caminho
-esperado:
+Copie a chave privada do GitHub App para o caminho esperado:
 
 ```bash
 sudo install -d -m 0750 /etc/github-secret
+
 sudo install -m 0600 /caminho/da/chave.pem \
   /etc/github-secret/fct-dti-x-01-server-client.private-key.pem
 ```
 
-O Ansible cria o usuário de sistema `github-secret`, ajusta dono/permissões da
-chave e usa tokens temporários do GitHub App para:
-
-- Clonar ou atualizar `/home/shared/server-FCT-DTI-X-01-secrets`;
-- Autenticar o Docker em `ghcr.io` quando necessário.
-
-Sem essa chave, o playbook deve falhar antes de aplicar os stacks Compose,
-porque não há como validar os overlays privados.
+Sem essa chave, o playbook deve falhar antes de aplicar os stacks Compose.
 
 ### 4. Rode o bootstrap
-
-Execute como root:
 
 ```bash
 sudo ./scripts/bootstrap-ansible-pull.sh
 ```
 
-O script faz o mínimo necessário para o primeiro `ansible-pull`:
+O bootstrap instala o mínimo necessário e executa o primeiro `ansible-pull`.
 
-1. Instala `ansible`, `git`, Python e certificados;
-2. Instala a coleção `community.docker`;
-3. Cria `/opt/ansible-pull`;
-4. Roda `ansible-pull` apontando para este repositório e para `site.yml`.
-
-Por padrão, ele usa:
+Valores padrão:
 
 ```text
 REPO_URL=https://github.com/cacic-fct/server-FCT-DTI-X-01.git
@@ -138,7 +107,7 @@ BRANCH=production
 CHECKOUT=/opt/ansible-pull/server-FCT-DTI-X-01
 ```
 
-Para testar outro fork, branch ou checkout:
+Para testar outra branch ou fork:
 
 ```bash
 sudo REPO_URL=https://github.com/cacic-fct/server-FCT-DTI-X-01.git \
@@ -147,9 +116,7 @@ sudo REPO_URL=https://github.com/cacic-fct/server-FCT-DTI-X-01.git \
   ./scripts/bootstrap-ansible-pull.sh
 ```
 
-### 5. Verifique se o timer ficou ativo
-
-Depois do bootstrap:
+### 5. Verifique o timer
 
 ```bash
 systemctl status ansible-pull-fct-dti-x-01.service
@@ -157,33 +124,31 @@ systemctl status ansible-pull-fct-dti-x-01.timer
 systemctl list-timers ansible-pull-fct-dti-x-01.timer
 ```
 
-Para ver logs:
+Logs da última execução:
 
 ```bash
 journalctl -u ansible-pull-fct-dti-x-01.service -n 200 --no-pager
 ```
 
-Para forçar uma nova aplicação manual depois do bootstrap:
+Executar manualmente:
 
 ```bash
 sudo systemctl start ansible-pull-fct-dti-x-01.service
 ```
 
-### 6. Valide Docker e Compose
-
-Confira os containers:
+### 6. Verifique Docker e Compose
 
 ```bash
 docker ps
 ```
 
-Confira os projetos aplicados:
+Listar projetos Compose aplicados:
 
 ```bash
 find /home/shared/docker-compose -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort
 ```
 
-Valide um projeto específico:
+Validar um projeto específico:
 
 ```bash
 cd /home/shared/docker-compose/traefik
@@ -191,58 +156,120 @@ docker compose config --quiet
 docker compose ps
 ```
 
-O Ansible já roda `docker compose config --quiet` para cada projeto listado em
-`compose_projects` antes de subir os stacks.
+## Fluxo de deploy
 
-## Validação e promoção
+1. Abra PR contra `main`.
+2. Aguarde o GitHub Actions validar.
+3. Depois do merge em `main`, o workflow promove o commit validado para `production`.
+4. O servidor aplica `production` no próximo timer ou quando o serviço for executado manualmente.
 
-O GitHub Actions roda em pull requests e em pushes para `main` e `production`.
-Ele valida:
+O CI valida:
 
-- Sintaxe YAML de todos os arquivos `.yml` e `.yaml`;
-- Sintaxe Ansible com `ansible-playbook --syntax-check site.yml`;
+- YAML;
+- sintaxe Ansible;
 - `ansible-lint`;
-- `docker compose config --quiet` para cada projeto em `docker-compose/` e
-  `compose-overlays/`.
+- `docker compose config --quiet` dos projetos Compose.
 
-Para validar Compose sem segredos no CI, `scripts/validate-compose-config.sh`
-copia os projetos para um diretório temporário, cria arquivos `env_file`
-vazios e fornece valores placeholder somente para a etapa de parsing.
+## Operação diária
 
-Fluxo de produção:
-
-1. Abra PRs contra `main`.
-2. Depois do merge em `main`, aguarde o GitHub Actions passar.
-3. Se a validação passar, o workflow atualiza `production` automaticamente para
-   o mesmo commit validado.
-
-Na primeira vez, crie a branch de produção a partir da `main` já validada:
+Após alterar este repositório ou o repositório privado de segredos:
 
 ```bash
-git checkout main
-git pull --ff-only origin main
-git checkout -b production
-git push -u origin production
+git add .
+git commit -m "Descrição da mudança"
+git push
 ```
 
-O `ansible-pull` do servidor usa `production`, então o deploy só acontece após
-o workflow promover um commit validado.
+Depois do deploy, acompanhe no servidor:
+
+```bash
+journalctl -u ansible-pull-fct-dti-x-01.service -f
+```
+
+Verifique containers:
+
+```bash
+docker ps
+```
+
+Verifique um Compose específico:
+
+```bash
+docker compose -f /home/shared/docker-compose/traefik/docker-compose.yml ps
+```
+
+## Onde colocar cada coisa
+
+| Conteúdo                                       | Local                                                 |
+| ---------------------------------------------- | ----------------------------------------------------- |
+| Compose público                                | `docker-compose/<projeto>/`                           |
+| Configuração pública versionada                | `docker-data/`                                        |
+| `.env`, tokens e segredos                      | repositório privado `server-FCT-DTI-X-01-secrets`     |
+| Estado de runtime                              | somente no servidor, em `/home/shared/docker-data`    |
+| Projeto externo que continua como Git checkout | `compose_external_repositories` + `compose-overlays/` |
+
+Não faça commit de bancos, uploads, caches persistentes, `acme.json`, `.env` ou arquivos com credenciais.
+
+## Como adicionar um stack Compose
+
+1. Crie:
+
+```text
+docker-compose/<projeto>/docker-compose.yml
+```
+
+2. Coloque segredos no repositório privado, não neste repositório.
+
+3. Declare diretórios ou arquivos persistentes em:
+
+```text
+host_vars/fct-dti-x-01/60-compose-storage.yml
+```
+
+4. Declare redes externas, se necessário, em:
+
+```text
+host_vars/fct-dti-x-01/70-compose-networking.yml
+```
+
+5. Adicione o projeto em:
+
+```text
+host_vars/fct-dti-x-01/90-compose-projects.yml
+```
+
+6. Valide antes de enviar:
+
+```bash
+docker compose -f docker-compose/<projeto>/docker-compose.yml config --quiet
+ansible-playbook --syntax-check site.yml
+```
+
+## Como remover um stack Compose
+
+1. Remova o projeto de `compose_projects`.
+2. Se quiser limpar containers e networks antigos, adicione o nome em `compose_retired_paths`.
+3. Remova os arquivos públicos que não forem mais usados.
+4. Remova overlays e segredos correspondentes no repositório privado.
+
+Projetos em `compose_retired_paths` são removidos pelo label:
+
+```text
+com.docker.compose.project
+```
 
 ## Modo conservador da primeira transição
 
-A configuração inicial evita mudanças destrutivas ou difíceis de reverter:
+A configuração inicial evita mudanças destrutivas:
 
-- `compose_pull_before_up: false`: não puxa imagens novas automaticamente; usa
-  imagem local quando existir e só baixa quando estiver faltando.
-- `compose_remove_orphans: false`: não remove containers órfãos dos projetos
-  ativos.
-- `firewall_apply_ipv4_policy: false`: não aplica a política IPv4 até alguém
-  confirmar acesso SSH/console.
-- `server_require_non_root_ssh_authorized_key: true`: impede hardening de SSH
-  se não houver chave de usuário não-root.
+```yaml
+compose_pull_before_up: false
+compose_remove_orphans: false
+firewall_apply_ipv4_policy: false
+server_require_non_root_ssh_authorized_key: true
+```
 
-Quando a primeira execução estiver validada, habilite explicitamente as
-mudanças em `host_vars/fct-dti-x-01/`:
+Depois de validar a primeira execução, habilite uma mudança por vez:
 
 ```yaml
 compose_pull_before_up: true
@@ -250,142 +277,39 @@ compose_remove_orphans: true
 firewall_apply_ipv4_policy: true
 ```
 
-Faça essas mudanças em commits pequenos e aplique uma de cada vez se o servidor
-ainda estiver em migração.
+Faça isso em commits pequenos.
 
-## Como gerenciar estado, configuração e segredos
+## Comandos úteis
 
-Use esta regra antes de adicionar qualquer arquivo:
-
-| Tipo de conteúdo                                           | Onde fica                                             | Exemplo                                           |
-| ---------------------------------------------------------- | ----------------------------------------------------- | ------------------------------------------------- |
-| Compose público                                            | `docker-compose/<projeto>/`                           | `docker-compose/traefik/docker-compose.yml`       |
-| Configuração pública montada em `/home/shared/docker-data` | `docker-data/`                                        | `docker-data/prometheus/prometheus.yml`           |
-| Estado persistente de runtime                              | somente no servidor, em `/home/shared/docker-data`    | bancos, uploads, bibliotecas, caches persistentes |
-| Arquivos `.env` e segredos                                 | repositório privado `server-FCT-DTI-X-01-secrets`     | `docker-compose/traefik/providers/crowdsec.yml`   |
-| Estado local gerado por serviço                            | somente no servidor                                   | `acme.json` do Traefik                            |
-| Projeto que precisa continuar como Git checkout            | `compose_external_repositories` + `compose-overlays/` | `unleash`                                         |
-
-### Configuração pública
-
-Coloque no repositório público tudo que pode ser lido sem credenciais e que
-deve ser reproduzível:
-
-- arquivos `docker-compose.yml`;
-- providers sem tokens;
-- configurações de Prometheus, Traefik, Grafana ou serviços equivalentes sem
-  segredo;
-- diretórios e arquivos vazios que precisam existir para bind mounts.
-
-O role `compose` copia:
-
-- `docker-compose/` para `/home/shared/docker-compose/`;
-- `docker-data/` para `/home/shared/docker-data/`.
-
-### Segredos e overlays privados
-
-Arquivos sensíveis não entram neste repositório. Eles ficam no repositório
-privado companheiro e são sobrepostos em `/home/shared/docker-compose/`.
-
-O Ansible trata o checkout privado como autoritativo:
-
-1. Verifica acesso ao repositório privado;
-2. Clona ou atualiza `/home/shared/server-FCT-DTI-X-01-secrets`;
-3. Força a versão configurada;
-4. Roda `git clean -ffdx` para remover arquivos locais fora do Git;
-5. Copia `server-FCT-DTI-X-01-secrets/docker-compose/` por cima de
-   `/home/shared/docker-compose/`;
-6. Remove overlays de segredo que ainda estavam implantados, mas não existem
-   mais no Git privado.
-
-Padrões tratados como segredos implantados:
-
-- `.env`
-- `*.env`
-- `*.secret`
-- `*.secret.*`
-- `crowdsec.yml`
-
-### Estado persistente
-
-Não se deve fazer commit do estado de runtime. Ele fica no servidor, principalmente em
-`/home/shared/docker-data`.
-
-Declare apenas a existência esperada em
-`host_vars/fct-dti-x-01/60-compose-storage.yml`:
-
-- `compose_data_directories`: diretórios persistentes que precisam existir;
-- `compose_data_files`: arquivos persistentes que precisam existir.
-
-O Ansible cria o que estiver faltando, mas não substitui dados existentes. Se um
-bind mount precisar ser arquivo e no servidor houver um diretório no lugar, o
-playbook falha para evitar perda de dados. Apenas diretórios vazios marcados com
-`repair_empty_directory: true` são removidos e recriados como arquivo.
-
-### Projetos Compose ativos
-
-Um diretório em `docker-compose/` só é aplicado se estiver listado em
-`compose_projects`, em `host_vars/fct-dti-x-01/90-compose-projects.yml`.
-
-Para adicionar um stack:
-
-1. Crie `docker-compose/<projeto>/docker-compose.yml`;
-2. Coloque segredos no repositório privado, não aqui;
-3. Declare diretórios ou arquivos persistentes em `60-compose-storage.yml`;
-4. Declare redes externas em `70-compose-networking.yml`, se necessário;
-5. Adicione o nome do projeto em `compose_projects`;
-6. Rode validação local ou aplique em uma janela de manutenção.
-
-Para remover um stack:
-
-1. Remova o projeto de `compose_projects`;
-2. Se ele precisar ser limpo na transição, adicione o nome em
-   `compose_retired_paths`;
-3. Remova os arquivos públicos quando não forem mais referência;
-4. Remova overlays privados correspondentes no repositório de segredos.
-
-Projetos em `compose_retired_paths` têm containers e networks removidos pelo
-label `com.docker.compose.project` antes de o diretório ser apagado.
-
-## Validação antes de enviar mudanças
-
-Valide a sintaxe Ansible:
-
-```bash
-ansible-playbook --syntax-check site.yml
-```
-
-Valide um Compose específico:
-
-```bash
-docker compose -f docker-compose/traefik/docker-compose.yml config --quiet
-```
-
-Depois que a mudança estiver no servidor, aplique manualmente se não quiser
-esperar o timer:
+Executar Ansible manualmente:
 
 ```bash
 sudo systemctl start ansible-pull-fct-dti-x-01.service
-journalctl -u ansible-pull-fct-dti-x-01.service -n 200 --no-pager
 ```
 
-## Operação diária
+Ver logs:
 
-Fluxo recomendado:
+```bash
+journalctl -u ansible-pull-fct-dti-x-01.service -n 200 --no-pager
+journalctl -u ansible-pull-fct-dti-x-01.service -f
+```
 
-1. Altere este repositório ou o repositório privado de segredos;
-2. Faça commit e push;
-3. No servidor, rode manualmente o service ou espere o timer;
-4. Acompanhe o journal;
-5. Verifique o serviço afetado com `docker compose ps` e logs do container.
-
-Comandos úteis:
+Ver timers:
 
 ```bash
 systemctl list-timers ansible-pull-fct-dti-x-01.timer
-journalctl -u ansible-pull-fct-dti-x-01.service -f
+```
+
+Ver containers:
+
+```bash
 docker ps
-docker compose -f /home/shared/docker-compose/traefik/docker-compose.yml ps
+```
+
+Validar Compose:
+
+```bash
+docker compose -f docker-compose/traefik/docker-compose.yml config --quiet
 ```
 
 ## Referências
