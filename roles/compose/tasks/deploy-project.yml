@@ -1,0 +1,16 @@
+---
+- name: Announce compose project deployment
+  ansible.builtin.debug:
+    msg: "Running docker compose up for services in {{ docker_compose_root }}/{{ compose_project }}"
+
+- name: Apply compose project
+  community.docker.docker_compose_v2:
+    project_src: "{{ docker_compose_root }}/{{ compose_project }}"
+    pull: "{{ 'always' if compose_pull_before_up else 'missing' }}"
+    remove_orphans: "{{ compose_remove_orphans | default(false) }}"
+    state: present
+  register: compose_project_apply
+
+- name: Announce compose project deployment result
+  ansible.builtin.debug:
+    msg: "Docker Compose services in {{ docker_compose_root }}/{{ compose_project }} are up (changed={{ compose_project_apply.changed }})"

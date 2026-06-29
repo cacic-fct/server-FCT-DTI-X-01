@@ -8,6 +8,53 @@
     update: true
   loop: "{{ compose_external_repositories }}"
 
+- name: Apply shared permissions to external service repository roots
+  ansible.builtin.file:
+    path: "{{ docker_compose_root }}/{{ item.name }}"
+    state: directory
+    owner: root
+    group: "{{ docker_compose_group }}"
+    mode: "2775"
+  loop: "{{ compose_external_repositories }}"
+
+- name: Find external service repository directories
+  ansible.builtin.find:
+    paths: "{{ docker_compose_root }}/{{ item.name }}"
+    file_type: directory
+    recurse: true
+    hidden: true
+  register: external_service_repository_directories
+  loop: "{{ compose_external_repositories }}"
+
+- name: Apply shared permissions to external service repository directories
+  ansible.builtin.file:
+    path: "{{ item.1.path }}"
+    owner: root
+    group: "{{ docker_compose_group }}"
+    mode: "2775"
+  loop: "{{ external_service_repository_directories.results | subelements('files') }}"
+  loop_control:
+    label: "{{ item.1.path }}"
+
+- name: Find external service repository files
+  ansible.builtin.find:
+    paths: "{{ docker_compose_root }}/{{ item.name }}"
+    file_type: file
+    recurse: true
+    hidden: true
+  register: external_service_repository_files
+  loop: "{{ compose_external_repositories }}"
+
+- name: Apply shared permissions to external service repository files
+  ansible.builtin.file:
+    path: "{{ item.1.path }}"
+    owner: root
+    group: "{{ docker_compose_group }}"
+    mode: "u=rwX,g=rwX,o=rX"
+  loop: "{{ external_service_repository_files.results | subelements('files') }}"
+  loop_control:
+    label: "{{ item.1.path }}"
+
 - name: Apply external service overlays
   ansible.builtin.copy:
     src: "{{ item.overlay }}/"

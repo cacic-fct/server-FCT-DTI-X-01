@@ -1,8 +1,7 @@
 ---
 - name: Apply compose projects
-  community.docker.docker_compose_v2:
-    project_src: "{{ docker_compose_root }}/{{ item }}"
-    pull: "{{ 'always' if compose_pull_before_up else 'missing' }}"
-    remove_orphans: "{{ compose_remove_orphans | default(false) }}"
-    state: present
+  ansible.builtin.include_tasks: deploy-project.yml
   loop: "{{ compose_projects }}"
+  loop_control:
+    loop_var: compose_project
+    label: "{{ compose_project }}"
