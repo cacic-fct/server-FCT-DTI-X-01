@@ -1,4 +1,22 @@
 ---
+- name: Check existing external service repository paths
+  ansible.builtin.stat:
+    path: "{{ docker_compose_root }}/{{ item.name }}"
+  register: external_service_repository_paths
+  loop: "{{ compose_external_repositories }}"
+
+- name: Normalize existing external service repository ownership before Git updates
+  ansible.builtin.file:
+    path: "{{ item.stat.path }}"
+    state: directory
+    owner: root
+    group: "{{ docker_compose_group }}"
+    recurse: true
+  loop: "{{ external_service_repository_paths.results }}"
+  loop_control:
+    label: "{{ item.stat.path }}"
+  when: item.stat.exists
+
 - name: Clone external service repositories
   ansible.builtin.git:
     repo: "{{ item.repo }}"
@@ -17,43 +35,23 @@
     mode: "2775"
   loop: "{{ compose_external_repositories }}"
 
-- name: Find external service repository directories
-  ansible.builtin.find:
-    paths: "{{ docker_compose_root }}/{{ item.name }}"
-    file_type: directory
-    recurse: true
-    hidden: true
-  register: external_service_repository_directories
+- name: Apply shared ownership to external service repositories
+  ansible.builtin.command:
+    cmd: "chown -R root:{{ docker_compose_group }} {{ docker_compose_root }}/{{ item.name }}"
   loop: "{{ compose_external_repositories }}"
+  changed_when: false
 
-- name: Apply shared permissions to external service repository directories
-  ansible.builtin.file:
-    path: "{{ item.1.path }}"
-    owner: root
-    group: "{{ docker_compose_group }}"
-    mode: "2775"
-  loop: "{{ external_service_repository_directories.results | subelements('files') }}"
-  loop_control:
-    label: "{{ item.1.path }}"
-
-- name: Find external service repository files
-  ansible.builtin.find:
-    paths: "{{ docker_compose_root }}/{{ item.name }}"
-    file_type: file
-    recurse: true
-    hidden: true
-  register: external_service_repository_files
+- name: Apply shared permissions to external service repositories
+  ansible.builtin.command:
+    cmd: "chmod -R u=rwX,g=rwX,o=rX {{ docker_compose_root }}/{{ item.name }}"
   loop: "{{ compose_external_repositories }}"
+  changed_when: false
 
-- name: Apply shared permissions to external service repository files
-  ansible.builtin.file:
-    path: "{{ item.1.path }}"
-    owner: root
-    group: "{{ docker_compose_group }}"
-    mode: "u=rwX,g=rwX,o=rX"
-  loop: "{{ external_service_repository_files.results | subelements('files') }}"
-  loop_control:
-    label: "{{ item.1.path }}"
+- name: Preserve setgid on external service repository directories
+  ansible.builtin.command:
+    cmd: "find {{ docker_compose_root }}/{{ item.name }} -type d -exec chmod g+s {} +"
+  loop: "{{ compose_external_repositories }}"
+  changed_when: false
 
 - name: Apply external service overlays
   ansible.builtin.copy:
