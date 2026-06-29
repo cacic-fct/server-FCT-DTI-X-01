@@ -1,6 +1,6 @@
 services:
   traefik:
-    image: "traefik:v3.3.6"
+    image: "traefik:v3.7.1"
     container_name: "traefik"
     restart: "always"
     networks:
@@ -60,7 +60,7 @@ services:
       - "--accesslog"
       - "--accesslog.filepath=/var/log/traefik/access.log"
       - "--experimental.plugins.crowdsec-bouncer-traefik-plugin.modulename=github.com/maxlerebourg/crowdsec-bouncer-traefik-plugin"
-      - "--experimental.plugins.crowdsec-bouncer-traefik-plugin.version=v1.4.2"
+      - "--experimental.plugins.crowdsec-bouncer-traefik-plugin.version=v1.6.0"
 
     ports:
       - "80:80"
@@ -71,7 +71,7 @@ services:
       - "./letsencrypt:/letsencrypt"
       - "./providers:/providers"
       - "/home/shared/docker-data/crowdsec/traefikLogs:/var/log/traefik"
-      - "/home/shared/docker-compose/cacic-error-pages/html:/error-pages"
+      - "/home/shared/docker-data/cacic-error-pages/html:/error-pages"
 
     logging:
       driver: "json-file"
@@ -99,14 +99,14 @@ services:
       - "traefik.http.routers.unespEntryPointIp.entrypoints=web, websecure"
       - "traefik.http.routers.unespEntryPointIp.tls.options=directIp@file"
 
-      # Redirect 38a.fct.unesp.br e fctdtiwebxp01.cacic.dev.br para a documentação do servidor
-      - "traefik.http.routers.unespEntryPoint.rule=Host(`38a.fct.unesp.br`) || Host(`fctdtiwebxp01.cacic.dev.br`)"
+      # Redirect 38a.fct.unesp.br e fct-dti-x-01.cacic.dev.br para a documentação do servidor
+      - "traefik.http.routers.unespEntryPoint.rule=Host(`38a.fct.unesp.br`) || Host(`fctdtiwebxp01.cacic.dev.br`) || Host(`fct-dti-x-01.cacic.dev.br`)"
       - "traefik.http.routers.unespEntryPoint.middlewares=unespEntryPoint-dos, unespEntryPoint-dos-req, redirectToDocs"
       - "traefik.http.routers.unespEntryPoint.entrypoints=web, websecure"
       - "traefik.http.middlewares.redirectToDocs.redirectregex.regex=.*"
-      - "traefik.http.middlewares.redirectToDocs.redirectregex.replacement=https://cacic.dev.br/docs/Recursos/Servidores/FCTDTIWEBXP01"
+      - "traefik.http.middlewares.redirectToDocs.redirectregex.replacement=https://cacic.dev.br/docs/Recursos/Servidores/FCT-DTI-X-01"
       - "traefik.http.routers.unespEntryPoint.tls.certResolver=letsencrypt"
-      - "traefik.http.routers.unespEntryPoint.tls.domains=fctdtiwebxp01.cacic.dev.br"
+      - "traefik.http.routers.unespEntryPoint.tls.domains=fct-dti-x-01.cacic.dev.br"
       ## Rate limit, por excesso de cautela
       - "traefik.http.middlewares.unespEntryPoint-dos-req.inflightreq.amount=3"
       - "traefik.http.middlewares.unespEntryPoint-dos.ratelimit.average=3"

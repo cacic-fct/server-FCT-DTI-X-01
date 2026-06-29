@@ -1,0 +1,46 @@
+---
+compose_projects:
+  - cacic-error-pages
+  - crowdsec
+  - prometheus
+  - prometheus-node
+  - traefik
+  - fake-smtp
+  - authentik
+  - grafana
+  - uptime-kuma
+  - beszel-dashboard
+  - cacic-email-templates
+  - glitchtip
+  - immich
+  - infisical
+  - shlink
+  - typesense
+  - umami-analytics
+  - unleash
+  - vaultwarden
+  - wud-updater
+
+compose_pull_before_up: false
+compose_remove_orphans: false
+
+compose_public_paths_moved_to_secrets:
+  - cacic-error-pages/html
+  - traefik/providers/crowdsec.yml
+
+compose_required_secret_overlay_files:
+  - traefik/providers/crowdsec.yml
+
+compose_secret_overlay_cleanup_patterns:
+  - .env
+  - "*.env"
+  - "*.secret"
+  - "*.secret.*"
+  - crowdsec.yml
+
+compose_secret_overlay_exclude_patterns:
+  - acme.json
+
+compose_retired_paths:
+  - cacic-fctapp
+  - cacic-fctapp-byebye

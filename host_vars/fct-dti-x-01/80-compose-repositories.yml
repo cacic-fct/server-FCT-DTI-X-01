@@ -1,0 +1,6 @@
+---
+compose_external_repositories:
+  - name: unleash
+    repo: https://github.com/Unleash/unleash
+    version: 4de96077519a7a494df1e86b7f7d357cb47c589d
+    overlay: "{{ playbook_dir }}/compose-overlays/unleash"

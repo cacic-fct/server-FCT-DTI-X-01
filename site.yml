@@ -1,0 +1,9 @@
+---
+- name: Manage FCT-DTI-X-01
+  hosts: fct-dti-x-01
+  become: true
+  roles:
+    - role: base
+    - role: docker
+    - role: ansible_pull
+    - role: compose

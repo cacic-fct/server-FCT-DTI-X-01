@@ -1,0 +1,19 @@
+---
+- name: Restart ssh
+  ansible.builtin.service:
+    name: ssh
+    state: restarted
+
+- name: Restart zramswap
+  ansible.builtin.service:
+    name: zramswap
+    state: restarted
+  failed_when: false
+
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Restore iptables
+  ansible.builtin.command: iptables-restore /etc/iptables/rules.v4
+  changed_when: true

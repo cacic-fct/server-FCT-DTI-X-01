@@ -1,0 +1,40 @@
+services:
+  beszel:
+    image: henrygd/beszel
+    container_name: beszel
+    restart: unless-stopped
+    volumes:
+      - /home/shared/docker-data/beszel:/beszel_data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.beszel.entryPoints=web, websecure"
+      - "traefik.http.routers.beszel.rule=Host(`dashboard.cacic.dev.br`)"
+      - "traefik.http.routers.beszel.tls=true"
+      - "traefik.http.routers.beszel.tls.certResolver=letsencrypt"
+      - "traefik.http.routers.beszel.tls.domains=dashboard.cacic.dev.br"
+      - "traefik.http.services.beszel-svc.loadbalancer.server.port=8090"
+      - "traefik.http.routers.beszel.service=beszel-svc"
+    networks:
+      - traefik
+      - default
+
+  beszel-agent:
+    image: "henrygd/beszel-agent"
+    container_name: "beszel-agent"
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # monitor other disks / partitions by mounting a folder in /extra-filesystems
+      # - /mnt/disk/.beszel:/extra-filesystems/sda1:ro
+    environment:
+      PORT: 45876
+      KEY: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOcjpzoFzfZz3RYVGXn8c+uJAXAzLrmapApeWWcIbx+/"
+    networks:
+      - default
+
+networks:
+  traefik:
+    external: true
+
+

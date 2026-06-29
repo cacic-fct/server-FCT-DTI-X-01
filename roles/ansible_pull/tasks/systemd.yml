@@ -1,0 +1,25 @@
+---
+- name: Install ansible-pull service
+  ansible.builtin.template:
+    src: ansible-pull-fct-dti-x-01.service.j2
+    dest: /etc/systemd/system/ansible-pull-fct-dti-x-01.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart ansible-pull timer
+
+- name: Install ansible-pull timer
+  ansible.builtin.template:
+    src: ansible-pull-fct-dti-x-01.timer.j2
+    dest: /etc/systemd/system/ansible-pull-fct-dti-x-01.timer
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart ansible-pull timer
+
+- name: Enable ansible-pull timer
+  ansible.builtin.systemd:
+    name: ansible-pull-fct-dti-x-01.timer
+    enabled: true
+    state: started
+    daemon_reload: true

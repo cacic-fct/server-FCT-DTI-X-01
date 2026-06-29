@@ -1,3 +1,10 @@
 .DS_Store
 .env
 *.env
+*.secret
+*.secret.*
+*.private-key.pem
+__pycache__/
+*.pyc
+server-FCT-DTI-X-01-secrets/
+docker-compose/cacic-error-pages/html/

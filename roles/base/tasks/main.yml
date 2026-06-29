@@ -1,0 +1,27 @@
+---
+- name: Load platform checks
+  ansible.builtin.import_tasks: platform.yml
+
+- name: Load package management
+  ansible.builtin.import_tasks: packages.yml
+
+- name: Load access compliance checks
+  ansible.builtin.import_tasks: access-compliance.yml
+
+- name: Load access hardening
+  ansible.builtin.import_tasks: access.yml
+
+- name: Load login messages
+  ansible.builtin.import_tasks: login-messages.yml
+
+- name: Load memory configuration
+  ansible.builtin.import_tasks: memory.yml
+
+- name: Load unattended updates
+  ansible.builtin.import_tasks: updates.yml
+
+- name: Load firewall policy
+  ansible.builtin.import_tasks: firewall.yml
+
+- name: Load backup policy guardrails
+  ansible.builtin.import_tasks: backup-policy.yml

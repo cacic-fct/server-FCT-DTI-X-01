@@ -1,0 +1,61 @@
+name: Validation
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - production
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate Ansible and Compose
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install validation tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install ansible ansible-lint pyyaml
+          ansible-galaxy collection install -r requirements.yml
+
+      - name: Validate YAML syntax
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import sys
+
+          import yaml
+
+          failed = False
+          for path in sorted(Path(".").rglob("*")):
+              if ".git" in path.parts or path.suffix not in {".yml", ".yaml"}:
+                  continue
+              try:
+                  with path.open() as handle:
+                      list(yaml.safe_load_all(handle))
+              except Exception as exc:
+                  failed = True
+                  print(f"{path}: {exc}", file=sys.stderr)
+          if failed:
+              sys.exit(1)
+          PY
+
+      - name: Validate Ansible syntax
+        run: ansible-playbook --syntax-check site.yml
+
+      - name: Run ansible-lint
+        run: ansible-lint --profile min
+
+      - name: Validate Docker Compose projects
+        run: ./scripts/validate-compose-config.sh

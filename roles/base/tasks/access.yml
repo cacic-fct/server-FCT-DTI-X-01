@@ -1,0 +1,31 @@
+---
+- name: Check for non-root SSH authorized keys before hardening
+  ansible.builtin.shell: |
+    set -o pipefail
+    find /home -mindepth 3 -maxdepth 3 \
+      -path '/home/*/.ssh/authorized_keys' \
+      -not -path '/home/shared/*' \
+      -type f -size +0c -print -quit
+  args:
+    executable: /bin/bash
+  register: non_root_ssh_authorized_keys
+  changed_when: false
+  failed_when: false
+  when: server_require_non_root_ssh_authorized_key | default(true)
+
+- name: Require non-root SSH key before disabling password or root login
+  ansible.builtin.assert:
+    that:
+      - non_root_ssh_authorized_keys.stdout | length > 0
+    fail_msg: "Refusing to harden SSH before at least one non-root authorized_keys file exists under /home."
+  when: server_require_non_root_ssh_authorized_key | default(true)
+
+- name: Configure SSH hardening
+  ansible.builtin.template:
+    src: sshd-cacic-hardening.conf.j2
+    dest: /etc/ssh/sshd_config.d/10-cacic-hardening.conf
+    owner: root
+    group: root
+    mode: "0644"
+    validate: /usr/sbin/sshd -t -f %s
+  notify: Restart ssh

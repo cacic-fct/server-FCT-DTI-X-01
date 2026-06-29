@@ -1,0 +1,12 @@
+---
+- name: Inspect external Docker networks
+  ansible.builtin.command: "docker network inspect {{ item }}"
+  register: docker_network_inspect
+  changed_when: false
+  failed_when: false
+  loop: "{{ compose_networks }}"
+
+- name: Create missing external Docker networks
+  ansible.builtin.command: "docker network create {{ item.item }}"
+  loop: "{{ docker_network_inspect.results }}"
+  when: item.rc != 0

@@ -1,0 +1,33 @@
+---
+compose_data_directories:
+  - authentik
+  - beszel
+  - cacic-error-pages/html
+  - crowdsec/opt/crowdsec
+  - crowdsec/opt/crowdsec-db
+  - crowdsec/traefikLogs
+  - crowdsec/var/log/crowdsec
+  - glitchtip/pg-data
+  - glitchtip/uploads
+  - grafana
+  - immich/library
+  - immich/model-cache
+  - immich/postgres
+  - infisical/pg_data
+  - infisical/redis_data
+  - prometheus/data
+  - shlink/db-data
+  - typesense/analytics
+  - typesense/data
+  - umami/umami-db-data
+  - unleash/postgres_data
+  - uptime-kuma/data
+  - vaultwarden
+  - wud/store
+
+compose_data_files:
+  - path: crowdsec/var/log/auth.log
+    mode: "0644"
+    repair_empty_directory: true
+  - path: prometheus/prometheus.yml
+    mode: "0644"

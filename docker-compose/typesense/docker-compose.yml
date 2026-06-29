@@ -1,0 +1,26 @@
+services:
+  typesense:
+    image: typesense/typesense:28.0
+    restart: always
+    volumes:
+      - /home/shared/docker-data/typesense/data:/data
+      - /home/shared/docker-data/typesense/analytics:/analytics
+    env_file:
+      - typesense-conf.env
+    networks:
+      - traefik
+
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.typesense.entryPoints=websecure"
+      - "traefik.http.routers.typesense.rule=Host(`typesense.cacic.dev.br`)"
+      - "traefik.http.routers.typesense.tls=true"
+      - "traefik.http.routers.typesense.tls.certResolver=letsencrypt"
+      - "traefik.http.routers.typesense.tls.domains=typesense.cacic.dev.br"
+      - "traefik.http.services.typesense-svc.loadbalancer.server.port=8108"
+      - "traefik.http.routers.typesense.service=typesense-svc"
+
+networks:
+  traefik:
+    external: true

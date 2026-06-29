@@ -1,0 +1,81 @@
+---
+- name: Ensure compose and data roots exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - "{{ docker_compose_root }}"
+    - "{{ docker_data_root }}"
+
+- name: Create Docker data directories
+  ansible.builtin.file:
+    path: "{{ docker_data_root }}/{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop: "{{ compose_data_directories }}"
+
+- name: Check Docker data file paths
+  ansible.builtin.stat:
+    path: "{{ docker_data_root }}/{{ item.path }}"
+  loop: "{{ compose_data_files | default([]) }}"
+  register: compose_data_file_stats
+  loop_control:
+    label: "{{ item.path }}"
+
+- name: Repair empty Docker data directories where files are required
+  ansible.builtin.command: "rmdir {{ docker_data_root }}/{{ item.item.path }}"
+  loop: "{{ compose_data_file_stats.results | default([]) }}"
+  loop_control:
+    label: "{{ item.item.path }}"
+  when:
+    - item.stat.exists
+    - item.stat.isdir
+    - item.item.repair_empty_directory | default(false)
+
+- name: Recheck Docker data file paths after repairs
+  ansible.builtin.stat:
+    path: "{{ docker_data_root }}/{{ item.path }}"
+  loop: "{{ compose_data_files | default([]) }}"
+  register: compose_data_file_stats
+  loop_control:
+    label: "{{ item.path }}"
+
+- name: Refuse Docker data directories where files are required
+  ansible.builtin.assert:
+    that:
+      - not (item.stat.exists and item.stat.isdir)
+    fail_msg: >-
+      {{ docker_data_root }}/{{ item.item.path }} must be a file for its bind
+      mount, but it is currently a directory. Move or remove that directory
+      before applying this playbook.
+  loop: "{{ compose_data_file_stats.results | default([]) }}"
+  loop_control:
+    label: "{{ item.item.path }}"
+
+- name: Create Docker data file parent directories
+  ansible.builtin.file:
+    path: "{{ docker_data_root }}/{{ item.path | dirname }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop: "{{ compose_data_files | default([]) }}"
+  loop_control:
+    label: "{{ item.path | dirname }}"
+
+- name: Create missing Docker data files
+  ansible.builtin.copy:
+    dest: "{{ docker_data_root }}/{{ item.path }}"
+    content: ""
+    owner: root
+    group: root
+    mode: "{{ item.mode | default('0644') }}"
+    force: false
+  loop: "{{ compose_data_files | default([]) }}"
+  loop_control:
+    label: "{{ item.path }}"

@@ -1,0 +1,18 @@
+---
+- name: Require Debian
+  ansible.builtin.assert:
+    that:
+      - ansible_distribution == "Debian"
+    fail_msg: "This repository is intended for Debian on FCT-DTI-X-01."
+
+- name: Create shared server directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - "{{ shared_root }}"
+    - "{{ docker_compose_root }}"
+    - "{{ docker_data_root }}"

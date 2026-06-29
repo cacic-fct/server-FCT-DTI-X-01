@@ -1,0 +1,57 @@
+services:
+  umami:
+    image: ghcr.io/umami-software/umami:latest
+    env_file:
+      - app.secrets.env
+    environment:
+      DATABASE_TYPE: postgresql
+      CLIENT_IP_HEADER: CF-Connecting-IP
+      COLLECT_API_ENDPOINT: /a
+      TRACKER_SCRIPT_NAME: b.js
+      DEBUG: umami:middleware
+      GEO_DATABASE_URL: https://github.com/P3TERX/GeoLite.mmdb/releases/latest/download/GeoLite2-City.mmdb
+    depends_on:
+      db:
+        condition: service_healthy
+    init: true
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "curl http://localhost:3000/api/heartbeat"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.umami.entryPoints=web, websecure"
+      - "traefik.http.routers.umami.rule=Host(`a.cacic.dev.br`) || Host(`analytics.cacic.dev.br`)"
+      - "traefik.http.routers.umami.tls=true"
+      - "traefik.http.routers.umami.tls.certResolver=letsencrypt"
+      - "traefik.http.routers.umami.service=umami-svc"
+      - "traefik.http.services.umami-svc.loadbalancer.server.port=3000"
+    networks:
+    - default
+    - traefik
+
+  db:
+    image: postgres:16-alpine
+    env_file:
+      - db.secrets.env
+    environment:
+      POSTGRES_DB: umami
+      POSTGRES_USER: umami
+    volumes:
+      - /home/shared/docker-data/umami/umami-db-data:/var/lib/postgresql/data
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - default
+
+networks:
+  traefik:
+    external: true
+  default:

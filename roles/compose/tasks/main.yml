@@ -1,0 +1,28 @@
+---
+- name: Load GitHub App secrets authentication setup
+  ansible.builtin.import_tasks: github-app-auth.yml
+  when: server_secrets_auth_method | default('github_app') == 'github_app'
+
+- name: Load secret source checks
+  ansible.builtin.import_tasks: secrets-source.yml
+
+- name: Load compose filesystem setup
+  ansible.builtin.import_tasks: filesystem.yml
+
+- name: Load public configuration deployment
+  ansible.builtin.import_tasks: public-config.yml
+
+- name: Load external repository deployment
+  ansible.builtin.import_tasks: external-repositories.yml
+
+- name: Load secret overlay deployment
+  ansible.builtin.import_tasks: secret-overlays.yml
+
+- name: Load Docker network setup
+  ansible.builtin.import_tasks: networks.yml
+
+- name: Load compose validation
+  ansible.builtin.import_tasks: validate.yml
+
+- name: Load compose deployment
+  ansible.builtin.import_tasks: deploy.yml

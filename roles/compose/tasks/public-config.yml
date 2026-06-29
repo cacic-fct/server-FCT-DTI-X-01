@@ -1,0 +1,30 @@
+---
+- name: Deploy public compose configuration
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/docker-compose/"
+    dest: "{{ docker_compose_root }}/"
+    owner: root
+    group: root
+    mode: "0644"
+    directory_mode: "0755"
+
+- name: Remove public paths that moved to secret overlays
+  ansible.builtin.file:
+    path: "{{ docker_compose_root }}/{{ item }}"
+    state: absent
+  loop: "{{ compose_public_paths_moved_to_secrets | default([]) }}"
+
+- name: Check public docker-data configuration source
+  ansible.builtin.stat:
+    path: "{{ playbook_dir }}/docker-data"
+  register: public_docker_data_source
+
+- name: Deploy public docker-data configuration
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/docker-data/"
+    dest: "{{ docker_data_root }}/"
+    owner: root
+    group: root
+    mode: "0644"
+    directory_mode: "0755"
+  when: public_docker_data_source.stat.isdir | default(false)

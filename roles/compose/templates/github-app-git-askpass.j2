@@ -1,0 +1,25 @@
+#!/bin/sh
+set -eu
+
+case "${1:-}" in
+  *Username*|*username*)
+    printf '%s\n' 'x-access-token'
+    ;;
+  *Password*|*password*)
+    exec {{ server_secrets_github_app_token_helper_path | quote }} \
+{% if server_secrets_github_app_id is defined and (server_secrets_github_app_id | string | length > 0) %}
+      --app-id {{ server_secrets_github_app_id | quote }} \
+{% else %}
+      --app-slug {{ server_secrets_github_app_slug | quote }} \
+{% endif %}
+{% if server_secrets_github_app_installation_id is defined and (server_secrets_github_app_installation_id | string | length > 0) %}
+      --installation-id {{ server_secrets_github_app_installation_id | quote }} \
+{% else %}
+      --repo-url {{ server_secrets_repo_url | quote }} \
+{% endif %}
+      --private-key {{ server_secrets_github_app_private_key_path | quote }}
+    ;;
+  *)
+    printf '\n'
+    ;;
+esac

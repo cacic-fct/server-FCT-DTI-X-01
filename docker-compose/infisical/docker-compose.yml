@@ -1,0 +1,61 @@
+services:
+  backend:
+    container_name: infisical-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    image: infisical/infisical:latest-postgres
+    pull_policy: always
+    env_file: .env
+    environment:
+      - NODE_ENV=production
+    networks:
+      - infisical
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.infisical.entryPoints=websecure"
+      - "traefik.http.routers.infisical.rule=Host(`secrets.cacic.dev.br`)"
+      - "traefik.http.routers.infisical.tls=true"
+      - "traefik.http.routers.infisical.tls.certResolver=letsencrypt"
+      - "traefik.http.routers.infisical.tls.domains=secrets.cacic.dev.br"
+      - "traefik.http.services.infisical-svc.loadbalancer.server.port=8080"
+      - "traefik.http.routers.infisical.service=infisical-svc"
+      - "traefik.http.routers.infisical.middlewares=errorpages-mw@file, ipwhitelist-mw@file"
+
+  redis:
+    image: redis
+    container_name: infisical-dev-redis
+    env_file: .env
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    #    ports:
+    #      - 6379:6379
+    networks:
+      - infisical
+    volumes:
+      - /home/shared/docker-data/infisical/redis_data:/data
+
+  db:
+    container_name: infisical-db
+    image: postgres:14-alpine
+    restart: always
+    env_file: .env
+    volumes:
+      - /home/shared/docker-data/infisical/pg_data:/var/lib/postgresql/data
+    networks:
+      - infisical
+    healthcheck:
+      test: "pg_isready --username=${POSTGRES_USER} && psql --username=${POSTGRES_USER} --list"
+      interval: 5s
+      timeout: 10s
+      retries: 10
+
+networks:
+  infisical:
+  traefik:
+    external: true

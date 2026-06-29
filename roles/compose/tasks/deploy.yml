@@ -1,0 +1,8 @@
+---
+- name: Apply compose projects
+  community.docker.docker_compose_v2:
+    project_src: "{{ docker_compose_root }}/{{ item }}"
+    pull: "{{ 'always' if compose_pull_before_up else 'missing' }}"
+    remove_orphans: "{{ compose_remove_orphans | default(false) }}"
+    state: present
+  loop: "{{ compose_projects }}"

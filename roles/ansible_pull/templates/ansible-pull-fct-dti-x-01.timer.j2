@@ -1,0 +1,11 @@
+[Unit]
+Description=Run FCT-DTI-X-01 ansible-pull at 06:00 and 18:00
+
+[Timer]
+OnCalendar={{ ansible_pull_calendar }}
+Persistent=true
+RandomizedDelaySec=0
+Unit=ansible-pull-fct-dti-x-01.service
+
+[Install]
+WantedBy=timers.target

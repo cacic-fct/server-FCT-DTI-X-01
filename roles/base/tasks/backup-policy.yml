@@ -1,0 +1,15 @@
+---
+- name: Ensure no automatic zpaqfranz backup schedules are installed
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/cron.d/zpaqfranz-backup
+    - /etc/cron.daily/zpaqfranz-backup
+    - /etc/systemd/system/zpaqfranz-backup.service
+    - /etc/systemd/system/zpaqfranz-backup.timer
+    - /etc/systemd/system/docker-compose-backup.service
+    - /etc/systemd/system/docker-compose-backup.timer
+    - /etc/systemd/system/docker-data-backup.service
+    - /etc/systemd/system/docker-data-backup.timer
+  notify: Reload systemd

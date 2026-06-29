@@ -1,0 +1,14 @@
+services:
+  prometheus:
+    #  ports:
+    #    - 9090:9090
+    user: 0:0
+    image: prom/prometheus
+    volumes:
+      - /home/shared/docker-data/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - /home/shared/docker-data/prometheus/data:/prometheus
+    networks:
+      - prometheus
+networks:
+  prometheus:
+    external: true

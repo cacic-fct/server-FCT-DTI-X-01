@@ -1,0 +1,16 @@
+---
+- name: Create ansible-pull config directory
+  ansible.builtin.file:
+    path: /etc/ansible-pull
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Create ansible-pull checkout parent
+  ansible.builtin.file:
+    path: "{{ ansible_pull_checkout | dirname }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"

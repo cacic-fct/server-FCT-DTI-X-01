@@ -1,0 +1,9 @@
+---
+- name: Load Docker apt repository setup
+  ansible.builtin.import_tasks: repository.yml
+
+- name: Load Docker package installation
+  ansible.builtin.import_tasks: packages.yml
+
+- name: Load Docker service setup
+  ansible.builtin.import_tasks: service.yml

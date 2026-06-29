@@ -1,0 +1,7 @@
+---
+ansible_pull_repo_url: https://github.com/cacic-fct/server-FCT-DTI-X-01.git
+ansible_pull_repo_version: production
+ansible_pull_checkout: /opt/ansible-pull/server-FCT-DTI-X-01
+ansible_pull_inventory: "{{ ansible_pull_checkout }}/inventory/hosts.yml"
+ansible_pull_playbook: site.yml
+ansible_pull_calendar: "*-*-* 06,18:00:00"

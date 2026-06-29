@@ -1,0 +1,9 @@
+---
+- name: Configure zram defaults
+  ansible.builtin.template:
+    src: zramswap.j2
+    dest: /etc/default/zramswap
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart zramswap

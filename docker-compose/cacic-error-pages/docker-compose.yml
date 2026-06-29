@@ -1,0 +1,17 @@
+services:
+  errorpages:
+    image: nginx:latest
+    restart: unless-stopped
+    volumes:
+      - /home/shared/docker-data/cacic-error-pages/html:/usr/share/nginx/html
+    networks:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.errorpages.rule=HostRegexp(`{host:.+}`)"
+      - "traefik.http.routers.errorpages.priority=1"
+      - "traefik.http.routers.errorpages.service=errorpages-svc"
+      - "traefik.http.services.errorpages-svc.loadBalancer.server.port=80"
+networks:
+  traefik:
+    external: true

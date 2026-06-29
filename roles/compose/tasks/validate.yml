@@ -1,0 +1,7 @@
+---
+- name: Validate compose projects
+  ansible.builtin.command: docker compose config --quiet
+  args:
+    chdir: "{{ docker_compose_root }}/{{ item }}"
+  loop: "{{ compose_projects }}"
+  changed_when: false

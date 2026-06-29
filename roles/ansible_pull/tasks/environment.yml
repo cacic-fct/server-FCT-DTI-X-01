@@ -1,0 +1,9 @@
+---
+- name: Configure ansible-pull environment
+  ansible.builtin.template:
+    src: fct-dti-x-01.env.j2
+    dest: /etc/ansible-pull/fct-dti-x-01.env
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart ansible-pull timer

@@ -1,0 +1,10 @@
+---
+- name: Configure IPv4 firewall rules
+  ansible.builtin.template:
+    src: rules.v4.j2
+    dest: /etc/iptables/rules.v4
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restore iptables
+  when: firewall_apply_ipv4_policy | default(false)

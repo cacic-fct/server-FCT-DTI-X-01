@@ -1,0 +1,21 @@
+---
+server_base_packages:
+  - ansible
+  - apt-transport-https
+  - ca-certificates
+  - curl
+  - gdu
+  - git
+  - gnupg
+  - htop
+  - iptables-persistent
+  - netfilter-persistent
+  - python3
+  - python3-apt
+  - rsync
+  - unattended-upgrades
+  - zram-tools
+  - zsh
+
+server_optional_apt_packages:
+  - zpaqfranz

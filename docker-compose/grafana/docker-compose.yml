@@ -1,0 +1,43 @@
+services:
+  grafana:
+    image: grafana/grafana-oss
+    container_name: grafana
+    restart: unless-stopped
+    user: 0:0
+    volumes:
+      - /home/shared/docker-data/grafana:/var/lib/grafana
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.grafana.entryPoints=web, websecure"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.cacic.dev.br`)"
+      - "traefik.http.routers.grafana.tls=true"
+      - "traefik.http.routers.grafana.tls.certResolver=letsencrypt"
+      - "traefik.http.routers.grafana.tls.domains=grafana.cacic.dev.br"
+      - "traefik.http.services.grafana-svc.loadbalancer.server.port=3000"
+      - "traefik.http.routers.grafana.service=grafana-svc"
+    networks:
+      - traefik
+      - prometheus
+    env_file:
+      - secrets.env
+    environment:
+      GF_SERVER_ROOT_URL: "https://grafana.cacic.dev.br/"
+      GF_AUTH_GENERIC_OAUTH_ENABLED: "true"
+      GF_AUTH_GENERIC_OAUTH_NAME: "authentik"
+      GF_AUTH_GENERIC_OAUTH_SCOPES: "openid profile email"
+      GF_AUTH_GENERIC_OAUTH_AUTH_URL: "https://auth.cacic.dev.br/application/o/authorize/"
+      GF_AUTH_GENERIC_OAUTH_TOKEN_URL: "https://auth.cacic.dev.br/application/o/token/"
+      GF_AUTH_GENERIC_OAUTH_API_URL: "https://auth.cacic.dev.br/application/o/userinfo/"
+      GF_AUTH_SIGNOUT_REDIRECT_URL: "https://auth.cacic.dev.br/application/o/grafana/end-session/"
+      # Optionally enable auto-login (bypasses Grafana login screen)
+      GF_AUTH_OAUTH_AUTO_LOGIN: "true"
+      # Optionally map user groups to Grafana roles
+      GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH: "contains(groups, 'Grafana Admins') && 'Admin' || contains(groups, 'Grafana Editors') && 'Editor' || 'Viewer'"
+      GF_INSTALL_PLUGINS: "highlightinc-highlight-datasource"
+
+networks:
+  traefik:
+    external: true
+  prometheus:
+    external: true

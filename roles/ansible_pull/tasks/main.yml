@@ -1,0 +1,9 @@
+---
+- name: Load ansible-pull filesystem setup
+  ansible.builtin.import_tasks: filesystem.yml
+
+- name: Load ansible-pull environment setup
+  ansible.builtin.import_tasks: environment.yml
+
+- name: Load ansible-pull systemd setup
+  ansible.builtin.import_tasks: systemd.yml

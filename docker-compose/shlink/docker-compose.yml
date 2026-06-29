@@ -1,0 +1,73 @@
+
+services:
+  shlink_backend:
+    image: shlinkio/shlink:stable
+    container_name: shlink_backend
+    restart: unless-stopped
+    env_file:
+      - backend.secrets.env
+    environment:
+      - DEFAULT_DOMAIN=s.cacic.dev.br
+      - BASE_PATH=/s
+      - IS_HTTPS_ENABLED=true
+      - PORT=8081
+      - SHELL_VERBOSITY=3
+      - DB_DRIVER=postgres
+      - DB_USER=postgres
+      - DB_HOST=postgres
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.shlink-backend.entryPoints=websecure, web"
+      - 'traefik.http.routers.shlink-backend.rule=Host(`s.cacic.dev.br`) && (PathPrefix(`/s/`) || PathRegexp(`^\/s$`))'
+      - "traefik.http.routers.shlink-backend.tls=true"
+      - "traefik.http.routers.shlink-backend.tls.certResolver=letsencrypt"
+      - "traefik.http.routers.shlink-backend.tls.domains=s.cacic.dev.br"
+      - "traefik.http.routers.shlink-backend.service=shlink-backend-svc"
+      - "traefik.http.services.shlink-backend-svc.loadbalancer.server.port=8081"
+    depends_on:
+      - postgres
+    networks:
+      - traefik
+      - default
+
+  postgres:
+    image: postgres:14-alpine
+    restart: unless-stopped
+    volumes:
+      - /home/shared/docker-data/shlink/db-data:/var/lib/postgresql/data
+    env_file:
+      - postgres.secrets.env
+    networks:
+      - default
+
+  shlink_web:
+    image: shlinkio/shlink-web-client:stable
+    container_name: shlink_web
+    restart: unless-stopped
+    env_file:
+      - web.secrets.env
+    environment:
+      - SHLINK_SERVER_URL=https://s.cacic.dev.br/s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.shlink-frontend.entryPoints=websecure, web"
+      - "traefik.http.routers.shlink-frontend.rule=Host(`s.cacic.dev.br`)"
+      - "traefik.http.routers.shlink-frontend.tls=true"
+      - "traefik.http.routers.shlink-frontend.tls.certResolver=letsencrypt"
+      - "traefik.http.routers.shlink-frontend.tls.domains=s.cacic.dev.br"
+      - "traefik.http.routers.shlink-frontend.service=shlink-frontend-svc"
+      - "traefik.http.services.shlink-frontend-svc.loadbalancer.server.port=8080"
+      - "traefik.http.routers.shlink-frontend.middlewares=authentik@docker"
+
+    depends_on:
+      - shlink_backend
+    networks:
+      - traefik
+      - default
+
+networks:
+  default:
+  traefik:
+    external: true

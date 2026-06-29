@@ -1,0 +1,147 @@
+---
+- name: Assert GitHub App secrets authentication configuration
+  ansible.builtin.assert:
+    that:
+      - server_secrets_repo_url is match('^https://github.com/.+/.+\\.git$')
+      - >-
+        (server_secrets_github_app_id | default('', true) | string | length > 0) or
+        (server_secrets_github_app_slug | default('', true) | string | length > 0)
+      - server_secrets_github_app_user | length > 0
+      - server_secrets_github_app_group | length > 0
+      - server_secrets_github_app_private_key_path | length > 0
+    fail_msg: >-
+      GitHub App auth for the private secrets repository is not fully
+      configured. Set server_secrets_github_app_id, or set
+      server_secrets_github_app_slug only if GitHub's public app lookup can
+      resolve that slug.
+
+- name: Install GitHub App token helper dependency
+  ansible.builtin.apt:
+    name: python3-cryptography
+    state: present
+
+- name: Create GitHub App secrets group
+  ansible.builtin.group:
+    name: "{{ server_secrets_github_app_group }}"
+    system: true
+
+- name: Create GitHub App secrets user
+  ansible.builtin.user:
+    name: "{{ server_secrets_github_app_user }}"
+    group: "{{ server_secrets_github_app_group }}"
+    home: "{{ server_secrets_github_app_home }}"
+    create_home: true
+    system: true
+    shell: /usr/sbin/nologin
+
+- name: Create GitHub App secrets directories
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: "{{ item.mode }}"
+  loop:
+    - path: "{{ server_secrets_github_app_config_dir }}"
+      owner: root
+      group: "{{ server_secrets_github_app_group }}"
+      mode: "0750"
+    - path: "{{ server_secrets_github_app_home }}"
+      owner: "{{ server_secrets_github_app_user }}"
+      group: "{{ server_secrets_github_app_group }}"
+      mode: "0700"
+    - path: "{{ server_secrets_github_app_token_helper_path | dirname }}"
+      owner: root
+      group: root
+      mode: "0755"
+    - path: "{{ server_secrets_github_app_askpass_path | dirname }}"
+      owner: root
+      group: root
+      mode: "0755"
+
+- name: Check installed GitHub App private key
+  ansible.builtin.stat:
+    path: "{{ server_secrets_github_app_private_key_path }}"
+  register: server_secrets_github_app_private_key
+  no_log: true
+
+- name: Require GitHub App private key before pulling secrets
+  ansible.builtin.assert:
+    that:
+      - server_secrets_github_app_private_key.stat.exists | default(false)
+      - server_secrets_github_app_private_key.stat.isreg | default(false)
+    fail_msg: >-
+      Missing GitHub App private key. Place it on the Debian host at
+      {{ server_secrets_github_app_private_key_path }} before running Ansible.
+
+- name: Lock down GitHub App private key permissions
+  ansible.builtin.file:
+    path: "{{ server_secrets_github_app_private_key_path }}"
+    state: file
+    owner: "{{ server_secrets_github_app_user }}"
+    group: "{{ server_secrets_github_app_group }}"
+    mode: "0400"
+  no_log: true
+
+- name: Install GitHub App installation token helper
+  ansible.builtin.copy:
+    src: github-app-installation-token.py
+    dest: "{{ server_secrets_github_app_token_helper_path }}"
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install GitHub App git askpass helper
+  ansible.builtin.template:
+    src: github-app-git-askpass.j2
+    dest: "{{ server_secrets_github_app_askpass_path }}"
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Build GitHub App token helper arguments for GHCR
+  ansible.builtin.set_fact:
+    server_secrets_github_app_ghcr_token_argv: >-
+      {{
+        [server_secrets_github_app_token_helper_path]
+        + (
+          (
+            server_secrets_github_app_id is defined
+            and (server_secrets_github_app_id | string | length > 0)
+          )
+          | ternary(
+            ['--app-id', server_secrets_github_app_id | string],
+            ['--app-slug', server_secrets_github_app_slug | string]
+          )
+        )
+        + (
+          (
+            server_secrets_github_app_installation_id is defined
+            and (server_secrets_github_app_installation_id | string | length > 0)
+          )
+          | ternary(
+            ['--installation-id', server_secrets_github_app_installation_id | string],
+            ['--repo-url', server_secrets_repo_url | string]
+          )
+        )
+        + ['--private-key', server_secrets_github_app_private_key_path]
+      }}
+  no_log: true
+
+- name: Create GitHub App token for GHCR
+  ansible.builtin.command:
+    argv: "{{ server_secrets_github_app_ghcr_token_argv }}"
+  register: server_secrets_github_app_ghcr_token
+  changed_when: false
+  become_user: "{{ server_secrets_github_app_user }}"
+  environment:
+    HOME: "{{ server_secrets_github_app_home }}"
+  no_log: true
+
+- name: Authenticate Docker to GHCR with GitHub App token
+  community.docker.docker_login:
+    registry_url: ghcr.io
+    username: x-access-token
+    password: "{{ server_secrets_github_app_ghcr_token.stdout }}"
+    reauthorize: true
+  no_log: true

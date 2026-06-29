@@ -1,0 +1,16 @@
+---
+- name: Configure SSH banner
+  ansible.builtin.template:
+    src: sshbanner.j2
+    dest: /etc/sshbanner
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Configure MOTD
+  ansible.builtin.template:
+    src: motd.j2
+    dest: /etc/motd
+    owner: root
+    group: root
+    mode: "0644"
