@@ -4,9 +4,9 @@
     src: "{{ playbook_dir }}/docker-compose/"
     dest: "{{ docker_compose_root }}/"
     owner: root
-    group: root
-    mode: "0644"
-    directory_mode: "0755"
+    group: "{{ docker_compose_group }}"
+    mode: "0664"
+    directory_mode: "2775"
 
 - name: Remove public paths that moved to secret overlays
   ansible.builtin.file:

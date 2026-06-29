@@ -5,6 +5,7 @@ server_docs_url: https://cacic.dev.br/docs/Recursos/Servidores/FCT-DTI-X-01
 shared_root: /home/shared
 docker_compose_root: "{{ shared_root }}/docker-compose"
 docker_data_root: "{{ shared_root }}/docker-data"
+docker_compose_group: admin
 
 server_require_non_root_ssh_authorized_key: true
 

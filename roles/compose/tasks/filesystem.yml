@@ -1,5 +1,13 @@
 ---
-- name: Ensure compose and data roots exist
+- name: Ensure compose root exists
+  ansible.builtin.file:
+    path: "{{ docker_compose_root }}"
+    state: directory
+    owner: root
+    group: "{{ docker_compose_group }}"
+    mode: "2775"
+
+- name: Ensure Docker data root exists
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
@@ -7,7 +15,6 @@
     group: root
     mode: "0755"
   loop:
-    - "{{ docker_compose_root }}"
     - "{{ docker_data_root }}"
 
 - name: Create Docker data directories

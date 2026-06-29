@@ -13,7 +13,7 @@
     src: "{{ item.overlay }}/"
     dest: "{{ docker_compose_root }}/{{ item.name }}/"
     owner: root
-    group: root
-    mode: "0644"
-    directory_mode: "0755"
+    group: "{{ docker_compose_group }}"
+    mode: "0664"
+    directory_mode: "2775"
   loop: "{{ compose_external_repositories }}"
