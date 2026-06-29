@@ -14,10 +14,22 @@
     owner: root
     group: root
     mode: "0644"
+  register: docker_apt_key
 
 - name: Configure Docker apt repository
-  ansible.builtin.apt_repository:
-    repo: "deb [arch={{ docker_apt_arch }} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian {{ ansible_distribution_release }} stable"
-    filename: docker
+  ansible.builtin.deb822_repository:
+    name: docker
+    types: deb
+    uris: https://download.docker.com/linux/debian
+    suites: "{{ ansible_distribution_release }}"
+    components: stable
+    architectures: "{{ docker_apt_arch }}"
+    signed_by: /etc/apt/keyrings/docker.asc
     state: present
+    enabled: true
+  register: docker_apt_repository
+
+- name: Update apt cache after Docker repository changes
+  ansible.builtin.apt:
     update_cache: true
+  when: docker_apt_key.changed or docker_apt_repository.changed
