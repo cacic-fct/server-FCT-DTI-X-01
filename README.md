@@ -8,7 +8,9 @@ Depois do primeiro bootstrap, o próprio servidor reaplica este repositório tod
 os dias às 06:00 e às 18:00 pelo timer
 `ansible-pull-fct-dti-x-01.timer`.
 
-O servidor não acompanha a `main` diretamente. Os arquivos são validados e promovidos para `production`, que é a branch de deploy, que não deve ser alterada manualmente.
+O servidor não acompanha a `main` diretamente. Os arquivos são validados e
+promovidos automaticamente para `production`, que é a branch de deploy e não
+deve ser alterada manualmente.
 
 ## O que este repositório gerencia
 
@@ -207,17 +209,12 @@ vazios e fornece valores placeholder somente para a etapa de parsing.
 
 Fluxo de produção:
 
-```bash
-git checkout main
-git pull --ff-only origin main
-# aguarde o GitHub Actions passar em main
-git checkout production
-git pull --ff-only origin production
-git merge --ff-only main
-git push origin production
-```
+1. Abra PRs contra `main`.
+2. Depois do merge em `main`, aguarde o GitHub Actions passar.
+3. Se a validação passar, o workflow atualiza `production` automaticamente para
+   o mesmo commit validado.
 
-Na primeira vez, crie a branch de produção a partir do `main` já validado:
+Na primeira vez, crie a branch de produção a partir da `main` já validada:
 
 ```bash
 git checkout main
@@ -227,7 +224,7 @@ git push -u origin production
 ```
 
 O `ansible-pull` do servidor usa `production`, então o deploy só acontece após
-essa promoção explícita.
+o workflow promover um commit validado.
 
 ## Modo conservador da primeira transição
 

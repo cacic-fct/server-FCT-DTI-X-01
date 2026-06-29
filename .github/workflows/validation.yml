@@ -59,3 +59,20 @@ jobs:
 
       - name: Validate Docker Compose projects
         run: ./scripts/validate-compose-config.sh
+
+  promote-production:
+    name: Promote main to production
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    steps:
+      - name: Check out validated commit
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Fast-forward production
+        run: git push origin HEAD:production
