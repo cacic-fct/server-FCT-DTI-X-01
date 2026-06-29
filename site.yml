@@ -2,6 +2,15 @@
 - name: Manage FCT-DTI-X-01
   hosts: SECOMPP
   become: true
+  pre_tasks:
+    - name: Load FCT-DTI-X-01 profile variables
+      ansible.builtin.include_vars:
+        dir: "{{ playbook_dir }}/host_vars/fct-dti-x-01"
+        extensions:
+          - yml
+          - yaml
+      tags:
+        - always
   roles:
     - role: base
     - role: docker

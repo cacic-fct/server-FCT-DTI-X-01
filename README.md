@@ -26,25 +26,27 @@ deve ser alterada manualmente.
   cima da árvore pública antes da validação e do deploy.
 
 O playbook principal é `site.yml`. O inventário é local e fica em
-`inventory/hosts.yml`.
+`inventory/hosts.yml`. O host de inventário usa o hostname real do servidor,
+`SECOMPP`, para funcionar com o limite implícito do `ansible-pull`; a
+nomenclatura interna e os arquivos de perfil continuam como `FCT-DTI-X-01`.
 
 ## Estrutura rápida
 
-- `host_vars/SECOMPP/00-server.yml`: identidade do servidor, caminhos base
+- `host_vars/fct-dti-x-01/00-server.yml`: identidade do servidor, caminhos base
   e contas humanas esperadas.
-- `host_vars/SECOMPP/10-ansible-pull.yml`: origem, branch, checkout e
+- `host_vars/fct-dti-x-01/10-ansible-pull.yml`: origem, branch, checkout e
   agenda do `ansible-pull`.
-- `host_vars/SECOMPP/20-packages.yml`: pacotes obrigatórios e opcionais.
-- `host_vars/SECOMPP/30-firewall.yml`: portas públicas e redes autorizadas
+- `host_vars/fct-dti-x-01/20-packages.yml`: pacotes obrigatórios e opcionais.
+- `host_vars/fct-dti-x-01/30-firewall.yml`: portas públicas e redes autorizadas
   para SSH/ICMP.
-- `host_vars/SECOMPP/50-secrets.yml`: repositório privado de segredos e
+- `host_vars/fct-dti-x-01/50-secrets.yml`: repositório privado de segredos e
   autenticação via GitHub App.
-- `host_vars/SECOMPP/60-compose-storage.yml`: diretórios e arquivos de
+- `host_vars/fct-dti-x-01/60-compose-storage.yml`: diretórios e arquivos de
   estado persistente em `/home/shared/docker-data`.
-- `host_vars/SECOMPP/70-compose-networking.yml`: redes Docker externas.
-- `host_vars/SECOMPP/80-compose-repositories.yml`: projetos que precisam
+- `host_vars/fct-dti-x-01/70-compose-networking.yml`: redes Docker externas.
+- `host_vars/fct-dti-x-01/80-compose-repositories.yml`: projetos que precisam
   continuar como checkouts Git no servidor.
-- `host_vars/SECOMPP/90-compose-projects.yml`: lista dos projetos Compose
+- `host_vars/fct-dti-x-01/90-compose-projects.yml`: lista dos projetos Compose
   aplicados e flags conservadoras de transição.
 - `roles/`: implementação das tarefas Ansible.
 - `docs/compose-inventory.md`: inventário dos Compose migrados do servidor.
@@ -240,7 +242,7 @@ A configuração inicial evita mudanças destrutivas ou difíceis de reverter:
   se não houver chave de usuário não-root.
 
 Quando a primeira execução estiver validada, habilite explicitamente as
-mudanças em `host_vars/SECOMPP/`:
+mudanças em `host_vars/fct-dti-x-01/`:
 
 ```yaml
 compose_pull_before_up: true
@@ -310,7 +312,7 @@ Não se deve fazer commit do estado de runtime. Ele fica no servidor, principalm
 `/home/shared/docker-data`.
 
 Declare apenas a existência esperada em
-`host_vars/SECOMPP/60-compose-storage.yml`:
+`host_vars/fct-dti-x-01/60-compose-storage.yml`:
 
 - `compose_data_directories`: diretórios persistentes que precisam existir;
 - `compose_data_files`: arquivos persistentes que precisam existir.
@@ -323,7 +325,7 @@ playbook falha para evitar perda de dados. Apenas diretórios vazios marcados co
 ### Projetos Compose ativos
 
 Um diretório em `docker-compose/` só é aplicado se estiver listado em
-`compose_projects`, em `host_vars/SECOMPP/90-compose-projects.yml`.
+`compose_projects`, em `host_vars/fct-dti-x-01/90-compose-projects.yml`.
 
 Para adicionar um stack:
 
