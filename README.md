@@ -397,9 +397,3 @@ docker compose -f /home/shared/docker-compose/traefik/docker-compose.yml ps
 - [Firewall](https://cacic.dev.br/docs/Recursos/Servidores/FCT-DTI-X-01/Rede/Firewall)
 - [Pacotes](https://cacic.dev.br/docs/Recursos/Servidores/FCT-DTI-X-01/HW%20e%20SW/Pacotes)
 - [Sistema operacional](https://cacic.dev.br/docs/Recursos/Servidores/FCT-DTI-X-01/HW%20e%20SW/Sistema%20operacional)
-
-## Backups
-
-O playbook instala e valida pacotes relacionados, mas remove schedules
-conhecidos de backup automático com `zpaqfranz`. Backups com `zpaqfranz`
-continuam sendo operação manual, conforme a documentação do servidor.
