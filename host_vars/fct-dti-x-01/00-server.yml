@@ -12,7 +12,7 @@ server_require_non_root_ssh_authorized_key: true
 # Accounts provisioned by DTI outside Ansible. Ansible only verifies this
 # agreed state and must not create users or grant access here.
 server_human_accounts:
-  - name: dti
+  - name: redes
     required_groups:
       - sudo
       - docker
