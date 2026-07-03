@@ -1,6 +1,6 @@
 ---
 - name: Manage FCT-DTI-X-01
-  hosts: SECOMPP
+  hosts: secompp
   become: true
   pre_tasks:
     - name: Load FCT-DTI-X-01 profile variables
