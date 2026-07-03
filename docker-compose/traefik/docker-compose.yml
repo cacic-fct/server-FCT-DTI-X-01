@@ -100,7 +100,7 @@ services:
       - "traefik.http.routers.unespEntryPointIp.tls.options=directIp@file"
 
       # Redirect 38a.fct.unesp.br e fct-dti-x-01.cacic.dev.br para a documentação do servidor
-      - "traefik.http.routers.unespEntryPoint.rule=Host(`38a.fct.unesp.br`) || Host(`fctdtiwebxp01.cacic.dev.br`) || Host(`fct-dti-x-01.cacic.dev.br`)"
+      - "traefik.http.routers.unespEntryPoint.rule=Host(`38a.fct.unesp.br`) || Host(`fct-dti-x-01.cacic.dev.br`)"
       - "traefik.http.routers.unespEntryPoint.middlewares=unespEntryPoint-dos, unespEntryPoint-dos-req, redirectToDocs"
       - "traefik.http.routers.unespEntryPoint.entrypoints=web, websecure"
       - "traefik.http.middlewares.redirectToDocs.redirectregex.regex=.*"
