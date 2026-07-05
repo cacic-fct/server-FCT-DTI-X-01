@@ -161,7 +161,8 @@ docker compose ps
 1. Abra PR contra `main`.
 2. Aguarde o GitHub Actions validar.
 3. Depois do merge em `main`, o workflow promove o commit validado para `production`.
-4. O servidor aplica `production` no próximo timer ou quando o serviço for executado manualmente.
+4. Faça o mesmo fluxo no repositório privado de segredos quando houver alteração em `.env`, `*.env` ou overlays privados.
+5. O servidor aplica `production` dos dois repositórios no próximo timer ou quando o serviço for executado manualmente.
 
 O CI valida:
 
