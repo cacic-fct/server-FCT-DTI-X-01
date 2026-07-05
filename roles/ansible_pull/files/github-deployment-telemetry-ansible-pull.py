@@ -54,8 +54,16 @@ def request_json(method, path, token, payload=None):
         headers=headers,
         method=method,
     )
-    with urllib.request.urlopen(request, timeout=30) as response:
-        return json.loads(response.read().decode("utf-8"))
+    try:
+        with urllib.request.urlopen(request, timeout=30) as response:
+            return json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        detail = exc.read().decode("utf-8", errors="replace")
+        raise RuntimeError(
+            f"GitHub API {method} {path} failed: {exc.code} {exc.reason}: {detail[:500]}"
+        ) from exc
+    except urllib.error.URLError as exc:
+        raise RuntimeError(f"GitHub API {method} {path} failed: {exc.reason}") from exc
 
 
 def github_token():
