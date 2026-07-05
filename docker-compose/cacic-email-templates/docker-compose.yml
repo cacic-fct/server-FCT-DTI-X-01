@@ -5,7 +5,12 @@ services:
     networks:
       - traefik
     labels:
-      - "com.centurylinklabs.watchtower.scope=email-templates"
+      - "wud.watch=true"
+      - "wud.watch.digest=true"
+      - "wud.tag.include=^main$$"
+      - "wud.trigger.include=docker.emailtemplates"
+      - "wud.display.name=cacic-email-templates"
+      - "wud.link.template=https://github.com/cacic-fct/email-templates/pkgs/container/email-templates"
       # Traefik - Proxy
       - "traefik.enable=true"
       # Router
@@ -20,36 +25,6 @@ services:
       # Middlewares
       - "traefik.http.routers.email-templates.middlewares=email-templates-csp-mw"
       - "traefik.http.middlewares.email-templates-csp-mw.headers.contentSecurityPolicy=default-src 'self' cacic.dev.br; img-src *; style-src 'unsafe-inline'; object-src 'none'; script-src 'self' 'unsafe-inline'"
-
-  email-templates_watchtower:
-    image: containrrr/watchtower
-    restart: always
-    env_file:
-      - secrets.env
-    environment:
-      - WATCHTOWER_CLEANUP=true
-      - WATCHTOWER_SCOPE=email-templates
-      - WATCHTOWER_POLL_INTERVAL=86400
-      - WATCHTOWER_HTTP_API_UPDATE=true
-      - WATCHTOWER_HTTP_API_PERIODIC_POLLS=true
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    networks:
-      - traefik
-    labels:
-      - "com.centurylinklabs.watchtower.scope=email-templates"
-      - "traefik.enable=true"
-      - "traefik.docker.network=traefik"
-      - "traefik.http.routers.email-templates-watchtower.entryPoints=websecure"
-      - "traefik.http.routers.email-templates-watchtower.rule=Host(`watchtower.cacic.dev.br`) && PathPrefix(`/email-templates`)"
-      - "traefik.http.routers.email-templates-watchtower.tls=true"
-      - "traefik.http.routers.email-templates-watchtower.tls.certResolver=letsencrypt"
-      - "traefik.http.routers.email-templates-watchtower.tls.domains=watchtower.cacic.dev.br"
-      - "traefik.http.routers.email-templates-watchtower.service=email-templates-watchtower-svc"
-      - "traefik.http.services.email-templates-watchtower-svc.loadBalancer.server.port=8080"
-      - "traefik.http.routers.email-templates-watchtower.middlewares=email-templates-stripprefix, noindex@file"
-      # Remover o caminho /email-templates para redirecionar o pedido corretamente para a API
-      - "traefik.http.middlewares.email-templates-stripprefix.stripprefix.prefixes=/email-templates"
 
 networks:
   traefik:
