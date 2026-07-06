@@ -31,7 +31,6 @@ services:
       - "traefik.http.routers.immich.rule=Host(`fotos.cacic.dev.br`)"
       - "traefik.http.routers.immich.tls=true"
       - "traefik.http.routers.immich.tls.certResolver=letsencrypt"
-      - "traefik.http.routers.immich.tls.domains=fotos.cacic.dev.br"
       - "traefik.http.routers.immich.service=immich-svc"
       - "traefik.http.services.immich-svc.loadbalancer.server.port=2283"
       - "traefik.http.routers.immich.middlewares=errorpages-mw@file, ipwhitelist-mw@file"

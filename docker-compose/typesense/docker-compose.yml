@@ -17,7 +17,6 @@ services:
       - "traefik.http.routers.typesense.rule=Host(`typesense.cacic.dev.br`)"
       - "traefik.http.routers.typesense.tls=true"
       - "traefik.http.routers.typesense.tls.certResolver=letsencrypt"
-      - "traefik.http.routers.typesense.tls.domains=typesense.cacic.dev.br"
       - "traefik.http.services.typesense-svc.loadbalancer.server.port=8108"
       - "traefik.http.routers.typesense.service=typesense-svc"
 

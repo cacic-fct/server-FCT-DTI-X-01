@@ -13,7 +13,6 @@ services:
       - "traefik.http.routers.grafana.rule=Host(`grafana.cacic.dev.br`)"
       - "traefik.http.routers.grafana.tls=true"
       - "traefik.http.routers.grafana.tls.certResolver=letsencrypt"
-      - "traefik.http.routers.grafana.tls.domains=grafana.cacic.dev.br"
       - "traefik.http.services.grafana-svc.loadbalancer.server.port=3000"
       - "traefik.http.routers.grafana.service=grafana-svc"
     networks:

@@ -12,7 +12,6 @@ services:
       - "traefik.http.routers.beszel.rule=Host(`dashboard.cacic.dev.br`)"
       - "traefik.http.routers.beszel.tls=true"
       - "traefik.http.routers.beszel.tls.certResolver=letsencrypt"
-      - "traefik.http.routers.beszel.tls.domains=dashboard.cacic.dev.br"
       - "traefik.http.services.beszel-svc.loadbalancer.server.port=8090"
       - "traefik.http.routers.beszel.service=beszel-svc"
     networks:

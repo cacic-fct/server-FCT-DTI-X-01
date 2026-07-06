@@ -30,6 +30,9 @@ services:
 
       # Setup HTTPS
       - "--entrypoints.websecure.address=:443"
+      - "--entrypoints.websecure.http.tls.certresolver=letsencrypt"
+      - "--entrypoints.websecure.http.tls.domains[0].main=cacic.dev.br"
+      - "--entrypoints.websecure.http.tls.domains[0].sans=*.cacic.dev.br"
       ## HTTP/3
       - "--entrypoints.websecure.http3"
       ## Middlewares comuns para todos os serviços
@@ -86,7 +89,6 @@ services:
       - "traefik.http.routers.dashboard.rule=Host(`traefik.cacic.dev.br`)"
       - "traefik.http.routers.dashboard.service=api@internal"
       - "traefik.http.routers.dashboard.tls.certResolver=letsencrypt"
-      - "traefik.http.routers.dashboard.tls.domains=traefik.cacic.dev.br"
       - "traefik.http.services.dashboard.loadbalancer.server.port=8080"
       - "traefik.http.routers.dashboard.middlewares=authentik@docker, dashboard-redirect"
       ## Redirect acesso sem path para /dashboard
@@ -106,7 +108,6 @@ services:
       - "traefik.http.middlewares.redirectToDocs.redirectregex.regex=.*"
       - "traefik.http.middlewares.redirectToDocs.redirectregex.replacement=https://cacic.dev.br/docs/Recursos/Servidores/FCT-DTI-X-01"
       - "traefik.http.routers.unespEntryPoint.tls.certResolver=letsencrypt"
-      - "traefik.http.routers.unespEntryPoint.tls.domains=fct-dti-x-01.cacic.dev.br"
       ## Rate limit, por excesso de cautela
       - "traefik.http.middlewares.unespEntryPoint-dos-req.inflightreq.amount=3"
       - "traefik.http.middlewares.unespEntryPoint-dos.ratelimit.average=3"

@@ -99,7 +99,6 @@ services:
       - "traefik.http.services.seaweed-admin.loadbalancer.server.port=23646"
       - "traefik.http.routers.seaweed-admin.tls=true"
       - "traefik.http.routers.seaweed-admin.tls.certResolver=letsencrypt"
-      - "traefik.http.routers.seaweed-admin.tls.domains=storage.cacic.dev.br"
       - "traefik.docker.network=traefik"
     networks:
       - traefik
@@ -142,7 +141,6 @@ services:
       - "traefik.http.services.seaweed-s3.loadbalancer.server.port=8333"
       - "traefik.http.routers.seaweed-s3.tls=true"
       - "traefik.http.routers.seaweed-s3.tls.certResolver=letsencrypt"
-      - "traefik.http.routers.seaweed-s3.tls.domains=s3.cacic.dev.br"
       - "traefik.http.services.seaweed-s3.loadbalancer.passhostheader=true"
       - "traefik.http.middlewares.s3-headers.headers.customRequestHeaders.Host=s3.cacic.dev.br"
       - "traefik.docker.network=traefik"
