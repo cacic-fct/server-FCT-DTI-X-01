@@ -1,5 +1,5 @@
 ---
-firewall_apply_ipv4_policy: false
+firewall_apply_ipv4_policy: true
 
 firewall_allowed_ssh_ipv4:
   - 200.145.0.0/16

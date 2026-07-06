@@ -4,6 +4,7 @@
 :OUTPUT ACCEPT [0:0]
 
 -A INPUT -i lo -j ACCEPT
+-A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
 {% for cidr in firewall_allowed_ssh_ipv4 %}
 -A INPUT -s {{ cidr }} -p tcp -m tcp --dport 22 -j ACCEPT
 {% endfor %}
@@ -13,7 +14,6 @@
 {% for port in firewall_public_udp_ports %}
 -A INPUT -p udp -m udp --dport {{ port }} -j ACCEPT
 {% endfor %}
--A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
 {% for cidr in firewall_allowed_icmp_ipv4 %}
 -A INPUT -s {{ cidr }} -p icmp -m icmp --icmp-type echo-request -j ACCEPT
 {% endfor %}
