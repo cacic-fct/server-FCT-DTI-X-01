@@ -28,4 +28,10 @@
     group: root
     mode: "0644"
     validate: /usr/sbin/sshd -t -f %s
-  notify: Restart ssh
+  register: ssh_hardening_config
+
+- name: Restart ssh when hardening config changes
+  ansible.builtin.service:
+    name: ssh
+    state: restarted
+  when: ssh_hardening_config.changed
