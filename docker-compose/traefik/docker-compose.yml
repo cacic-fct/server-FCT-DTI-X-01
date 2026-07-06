@@ -58,6 +58,13 @@ services:
       - "--certificatesresolvers.letsencrypt.acme.email=letsencrypt@yudi.me"
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
 
+      - "--certificatesresolvers.letsencrypt-ip-http.acme.httpchallenge=true"
+      - "--certificatesresolvers.letsencrypt-ip-http.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.letsencrypt-ip-http.acme.profile=shortlived"
+      - "--certificatesresolvers.letsencrypt-ip-http.acme.disablecommonname=true"
+      - "--certificatesresolvers.letsencrypt-ip-http.acme.email=letsencrypt@yudi.me"
+      - "--certificatesresolvers.letsencrypt-ip-http.acme.storage=/letsencrypt/acme-ip.json"
+
       # Plugins
       ## Crowdsec - Proteção contra ataques
       - "--accesslog"
@@ -99,6 +106,8 @@ services:
       # Negar acesso direto pelo IP
       - "traefik.http.routers.unespEntryPointIp.rule=Host(`200.145.181.38`)"
       - "traefik.http.routers.unespEntryPointIp.entrypoints=web, websecure"
+      - "traefik.http.routers.unespEntryPointIp.tls=true"
+      - "traefik.http.routers.unespEntryPointIp.tls.certResolver=letsencrypt-ip-http"
       - "traefik.http.routers.unespEntryPointIp.tls.options=directIp@file"
 
       # Redirect 38a.fct.unesp.br e fct-dti-x-01.cacic.dev.br para a documentação do servidor

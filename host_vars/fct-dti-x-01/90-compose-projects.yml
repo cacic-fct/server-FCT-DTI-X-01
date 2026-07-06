@@ -53,6 +53,7 @@ compose_secret_overlay_cleanup_patterns:
 
 compose_secret_overlay_exclude_patterns:
   - acme.json
+  - acme-ip.json
 
 compose_retired_paths:
   - cacic-fctapp
