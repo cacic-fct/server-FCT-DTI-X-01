@@ -1,0 +1,295 @@
+name: novu
+
+services:
+  redis:
+    image: redis:alpine
+    container_name: novu-redis
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: 50m
+        max-file: "5"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongodb:
+    image: mongo:8.0.17
+    container_name: novu-mongodb
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: 50m
+        max-file: "5"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+    volumes:
+      - /home/shared/docker-data/cacic-novu/mongodb:/data/db
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mongosh",
+          "--quiet",
+          "--username",
+          "${MONGO_INITDB_ROOT_USERNAME}",
+          "--password",
+          "${MONGO_INITDB_ROOT_PASSWORD}",
+          "--eval",
+          "db.adminCommand('ping').ok",
+        ]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  api:
+    image: ghcr.io/novuhq/novu/api:3.15.0
+    container_name: novu-api
+    restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - default
+      - traefik
+    logging:
+      driver: json-file
+      options:
+        max-size: 50m
+        max-file: "5"
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      API_ROOT_URL: ${API_ROOT_URL}
+      PORT: ${API_PORT}
+      FRONT_BASE_URL: ${FRONT_BASE_URL}
+      MONGO_URL: ${MONGO_URL}
+      MONGO_MIN_POOL_SIZE: ${MONGO_MIN_POOL_SIZE}
+      MONGO_MAX_POOL_SIZE: ${MONGO_MAX_POOL_SIZE}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_DB_INDEX: 2
+      REDIS_CACHE_SERVICE_HOST: ${REDIS_CACHE_SERVICE_HOST}
+      REDIS_CACHE_SERVICE_PORT: ${REDIS_CACHE_SERVICE_PORT}
+      S3_LOCAL_STACK: ${S3_LOCAL_STACK}
+      S3_BUCKET_NAME: ${S3_BUCKET_NAME}
+      S3_REGION: ${S3_REGION}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      JWT_SECRET: ${JWT_SECRET}
+      STORE_ENCRYPTION_KEY: ${STORE_ENCRYPTION_KEY}
+      NOVU_SECRET_KEY: ${NOVU_SECRET_KEY}
+      SUBSCRIBER_WIDGET_JWT_EXPIRATION_TIME: ${SUBSCRIBER_WIDGET_JWT_EXPIRATION_TIME}
+      SENTRY_DSN: ${SENTRY_DSN}
+      NEW_RELIC_ENABLED: ${NEW_RELIC_ENABLED}
+      NEW_RELIC_APP_NAME: ${NEW_RELIC_APP_NAME}
+      NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
+      API_CONTEXT_PATH: ${API_CONTEXT_PATH:-/api}
+      MONGO_AUTO_CREATE_INDEXES: ${MONGO_AUTO_CREATE_INDEXES}
+      IS_API_IDEMPOTENCY_ENABLED: ${IS_API_IDEMPOTENCY_ENABLED}
+      IS_API_RATE_LIMITING_ENABLED: ${IS_API_RATE_LIMITING_ENABLED}
+      IS_NEW_MESSAGES_API_RESPONSE_ENABLED: ${IS_NEW_MESSAGES_API_RESPONSE_ENABLED}
+      IS_V2_ENABLED: ${IS_V2_ENABLED}
+      IS_SELF_HOSTED: ${IS_SELF_HOSTED}
+      DISABLE_USER_REGISTRATION: true
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget --no-verbose --tries=1 --spider http://localhost:$${PORT}/v1/health-check || exit 0",
+        ]
+      interval: 20s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "wud.watch=true"
+      - "wud.watch.digest=true"
+      - "wud.tag.include=^\\d+\\.\\d+\\.\\d+$$"
+      - "wud.display.name=novu-api"
+      - "wud.link.template=https://github.com/novuhq/novu/releases/tag/v$${major}.$${minor}.$${patch}"
+      - "traefik.enable=true"
+      - "traefik.scope=public"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.novu-api.entrypoints=web,websecure"
+      - "traefik.http.routers.novu-api.rule=Host(`notifications.cacic.dev.br`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.novu-api.tls=true"
+      - "traefik.http.routers.novu-api.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.novu-api.service=novu-api-svc"
+      - "traefik.http.services.novu-api-svc.loadbalancer.server.port=3000"
+
+  worker:
+    image: ghcr.io/novuhq/novu/worker:3.15.0
+    container_name: novu-worker
+    restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: 50m
+        max-file: "5"
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      PORT: ${WORKER_PORT:-3004}
+      MONGO_URL: ${MONGO_URL}
+      MONGO_MIN_POOL_SIZE: ${MONGO_MIN_POOL_SIZE}
+      MONGO_MAX_POOL_SIZE: ${MONGO_MAX_POOL_SIZE}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_DB_INDEX: 2
+      REDIS_CACHE_SERVICE_HOST: ${REDIS_CACHE_SERVICE_HOST}
+      REDIS_CACHE_SERVICE_PORT: ${REDIS_CACHE_SERVICE_PORT}
+      S3_LOCAL_STACK: ${S3_LOCAL_STACK}
+      S3_BUCKET_NAME: ${S3_BUCKET_NAME}
+      S3_REGION: ${S3_REGION}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      STORE_ENCRYPTION_KEY: ${STORE_ENCRYPTION_KEY}
+      SUBSCRIBER_WIDGET_JWT_EXPIRATION_TIME: ${SUBSCRIBER_WIDGET_JWT_EXPIRATION_TIME}
+      SENTRY_DSN: ${SENTRY_DSN}
+      NEW_RELIC_ENABLED: ${NEW_RELIC_ENABLED}
+      NEW_RELIC_APP_NAME: ${NEW_RELIC_APP_NAME}
+      NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
+      BROADCAST_QUEUE_CHUNK_SIZE: ${BROADCAST_QUEUE_CHUNK_SIZE}
+      MULTICAST_QUEUE_CHUNK_SIZE: ${MULTICAST_QUEUE_CHUNK_SIZE}
+      API_ROOT_URL: http://api:${API_PORT}/api
+      IS_EMAIL_INLINE_CSS_DISABLED: ${IS_EMAIL_INLINE_CSS_DISABLED}
+      IS_USE_MERGED_DIGEST_ID_ENABLED: ${IS_USE_MERGED_DIGEST_ID_ENABLED}
+      NOVU_BRIDGE_URL: http://api:${API_PORT}/api
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget --no-verbose --tries=1 --spider http://localhost:$${PORT:-3004}/v1/health-check || exit 1",
+        ]
+      interval: 20s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    labels:
+      - "wud.watch=true"
+      - "wud.watch.digest=true"
+      - "wud.tag.include=^\\d+\\.\\d+\\.\\d+$$"
+      - "wud.display.name=novu-worker"
+      - "wud.link.template=https://github.com/novuhq/novu/releases/tag/v$${major}.$${minor}.$${patch}"
+
+  ws:
+    image: ghcr.io/novuhq/novu/ws:3.15.0
+    container_name: novu-ws
+    restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - default
+      - traefik
+    logging:
+      driver: json-file
+      options:
+        max-size: 50m
+        max-file: "5"
+    environment:
+      PORT: ${WS_PORT}
+      NODE_ENV: ${NODE_ENV}
+      MONGO_URL: ${MONGO_URL}
+      MONGO_MIN_POOL_SIZE: ${MONGO_MIN_POOL_SIZE}
+      MONGO_MAX_POOL_SIZE: ${MONGO_MAX_POOL_SIZE}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      WS_CONTEXT_PATH: ${WS_CONTEXT_PATH:-/ws}
+      NEW_RELIC_ENABLED: ${NEW_RELIC_ENABLED}
+      NEW_RELIC_APP_NAME: ${NEW_RELIC_APP_NAME}
+      NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget --no-verbose --tries=1 --spider http://localhost:$${PORT}/ws/v1/health-check || exit 1",
+        ]
+      interval: 20s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "wud.watch=true"
+      - "wud.watch.digest=true"
+      - "wud.tag.include=^\\d+\\.\\d+\\.\\d+$$"
+      - "wud.display.name=novu-ws"
+      - "wud.link.template=https://github.com/novuhq/novu/releases/tag/v$${major}.$${minor}.$${patch}"
+      - "traefik.enable=true"
+      - "traefik.scope=public"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.novu-ws.entrypoints=web,websecure"
+      - "traefik.http.routers.novu-ws.rule=Host(`notifications.cacic.dev.br`) && (PathPrefix(`/ws`) || PathPrefix(`/socket.io`))"
+      - "traefik.http.routers.novu-ws.tls=true"
+      - "traefik.http.routers.novu-ws.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.novu-ws.service=novu-ws-svc"
+      - "traefik.http.services.novu-ws-svc.loadbalancer.server.port=3002"
+
+  dashboard:
+    image: ghcr.io/novuhq/novu/dashboard:3.15.0
+    container_name: novu-dashboard
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+      worker:
+        condition: service_healthy
+    networks:
+      - default
+      - traefik
+    logging:
+      driver: json-file
+      options:
+        max-size: 50m
+        max-file: "5"
+    environment:
+      VITE_API_HOSTNAME: ${VITE_API_HOSTNAME}
+      VITE_WEBSOCKET_HOSTNAME: ${VITE_WEBSOCKET_HOSTNAME}
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'node -e "const http = require(''http''); const req = http.get({hostname: ''localhost'', port: 4000, path: ''/'', timeout: 5000}, (res) => { process.exit(res.statusCode === 200 ? 0 : 1); }); req.on(''error'', () => process.exit(1)); req.on(''timeout'', () => { req.destroy(); process.exit(1); });"',
+        ]
+      interval: 20s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    labels:
+      - "wud.watch=true"
+      - "wud.watch.digest=true"
+      - "wud.tag.include=^\\d+\\.\\d+\\.\\d+$$"
+      - "wud.display.name=novu-dashboard"
+      - "wud.link.template=https://github.com/novuhq/novu/releases/tag/v$${major}.$${minor}.$${patch}"
+      - "traefik.enable=true"
+      - "traefik.scope=public"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.novu-dashboard.entrypoints=web,websecure"
+      - "traefik.http.routers.novu-dashboard.rule=Host(`notifications.cacic.dev.br`)"
+      - "traefik.http.routers.novu-dashboard.tls=true"
+      - "traefik.http.routers.novu-dashboard.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.novu-dashboard.service=novu-dashboard-svc"
+      - "traefik.http.services.novu-dashboard-svc.loadbalancer.server.port=4000"
+
+networks:
+  traefik:
+    external: true
+  default:

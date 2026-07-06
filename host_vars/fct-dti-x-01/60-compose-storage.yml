@@ -3,6 +3,11 @@ compose_data_directories:
   - authentik
   - beszel
   - cacic-error-pages/html
+  - cacic-account/postgres_data
+  - cacic-account/redis_data
+  - cacic-event-manager/db
+  - cacic-event-manager/redis
+  - cacic-novu/mongodb
   - crowdsec/opt/crowdsec
   - crowdsec/opt/crowdsec-db
   - crowdsec/traefikLogs
@@ -15,7 +20,14 @@ compose_data_directories:
   - immich/postgres
   - infisical/pg_data
   - infisical/redis_data
+  - keycloak/postgres_data
   - prometheus/data
+  - seaweedfs/data/admin
+  - seaweedfs/data/filer
+  - seaweedfs/data/master
+  - seaweedfs/data/s3
+  - seaweedfs/data/volume
+  - seaweedfs/postgres_data
   - shlink/db-data
   - typesense/analytics
   - typesense/data

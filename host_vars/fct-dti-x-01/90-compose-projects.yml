@@ -7,10 +7,15 @@ compose_projects:
   - traefik
   - fake-smtp
   - authentik
+  - keycloak
   - grafana
   - uptime-kuma
   - beszel-dashboard
+  - seaweedfs
+  - cacic-novu
+  - cacic-account-manager
   - cacic-email-templates
+  - cacic-event-manager
   - glitchtip
   - immich
   - infisical
@@ -29,6 +34,14 @@ compose_public_paths_moved_to_secrets:
   - traefik/providers/crowdsec.yml
 
 compose_required_secret_overlay_files:
+  - cacic-account-manager/.env
+  - cacic-event-manager/.env
+  - cacic-novu/.env
+  - keycloak/.env
+  - seaweedfs/.env
+  - seaweedfs/etc/seaweed/filer.toml
+  - seaweedfs/etc/seaweed/s3_config.json
+  - seaweedfs/etc/seaweed/security.toml
   - traefik/providers/crowdsec.yml
 
 compose_secret_overlay_cleanup_patterns:

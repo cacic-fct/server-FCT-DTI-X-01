@@ -1,0 +1,75 @@
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "3"
+
+services:
+  keycloak:
+    container_name: keycloak_app
+    image: quay.io/keycloak/keycloak:${KC_VERSION}
+    restart: always
+    volumes:
+      - ./providers:/opt/keycloak/providers:ro
+    environment:
+      KC_DB: postgres
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      KC_DB_URL: jdbc:postgresql://keycloak_postgres:5432/keycloak
+      KC_METRICS_ENABLED: true
+      KC_LOG_LEVEL: ${KC_LOG_LEVEL}
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KC_HOSTNAME: ${KC_HOSTNAME}
+      KC_HOSTNAME_ADMIN: ${KC_HOSTNAME_ADMIN}
+      KC_HTTP_ENABLED: true
+      KC_PROXY_HEADERS: xforwarded
+      KC_FEATURES: scripts
+    depends_on:
+      keycloak_postgres:
+        condition: service_healthy
+    labels:
+      - "wud.watch=true"
+      - "wud.watch.digest=true"
+      - "wud.tag.include=^\\d+\\.\\d+\\.\\d+$$"
+      - "wud.trigger.include=docker.keycloak"
+      - "wud.display.name=keycloak"
+      - "wud.link.template=https://github.com/keycloak/keycloak/releases/tag/$${major}.$${minor}.$${patch}"
+      - "traefik.enable=true"
+      - "traefik.scope=public"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.keycloak.entryPoints=web, websecure"
+      - "traefik.http.routers.keycloak.rule=Host(`sso.cacic.dev.br`) || Host(`sso-admin.cacic.dev.br`)"
+      - "traefik.http.routers.keycloak.tls=true"
+      - "traefik.http.routers.keycloak.tls.certResolver=letsencrypt"
+      - "traefik.http.routers.keycloak.tls.domains=sso.cacic.dev.br, sso-admin.cacic.dev.br"
+      - "traefik.http.routers.keycloak.service=keycloak-svc"
+      - "traefik.http.services.keycloak-svc.loadbalancer.server.port=8080"
+    networks:
+      - default
+      - traefik
+    command:
+      - start
+    logging: *logging
+
+  keycloak_postgres:
+    container_name: keycloak_postgres
+    image: postgres:${POSTGRES_VERSION}
+    restart: always
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      POSTGRES_PORT: 5432
+    volumes:
+      - /home/shared/docker-data/keycloak/postgres_data:/var/lib/postgresql/data
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "keycloak"]
+    logging: *logging
+
+networks:
+  default:
+  traefik:
+    external: true

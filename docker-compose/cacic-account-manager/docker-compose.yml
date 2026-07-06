@@ -1,0 +1,129 @@
+name: cacic-account
+
+services:
+  cacic-db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+    volumes:
+      - /home/shared/docker-data/cacic-account/postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - postgres_network
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - /home/shared/docker-data/cacic-account/redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - redis_network
+    restart: unless-stopped
+
+  cacic-account-manager-backend:
+    image: ghcr.io/cacic-fct/account-manager/account-backend:latest
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:postgres@cacic-db:5432/postgres?schema=public}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    command:
+      - sh
+      - -c
+      - |
+        cd /app/apps/account-backend
+        ../../node_modules/.bin/prisma migrate deploy --config prisma.config.ts
+        cd /app
+        exec node main.js
+    depends_on:
+      cacic-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - postgres_network
+      - redis_network
+      - traefik
+    labels:
+      - 'wud.watch=true'
+      - 'wud.watch.digest=true'
+      - 'wud.tag.include=^latest$$'
+      - 'wud.trigger.include=docker.accountmanager'
+      - 'wud.display.name=account-manager-backend'
+      - 'wud.link.template=https://github.com/cacic-fct/account-manager/pkgs/container/account-manager%2Faccount-backend'
+      - 'traefik.enable=true'
+      - 'traefik.scope=public'
+      - 'traefik.docker.network=traefik'
+      - 'traefik.http.routers.backend-le.entrypoints=web,websecure'
+      - 'traefik.http.routers.backend-le.rule=Host(`account.cacic.dev.br`) && PathPrefix(`/api`)'
+      - 'traefik.http.routers.backend-le.tls=true'
+      - 'traefik.http.routers.backend-le.tls.certresolver=letsencrypt'
+      - 'traefik.http.routers.backend-le.service=backend-le-svc'
+      - 'traefik.http.services.backend-le-svc.loadbalancer.server.port=3000'
+
+  cacic-account-manager-frontend:
+    image: ghcr.io/cacic-fct/account-manager/account-frontend:latest
+    restart: unless-stopped
+    networks:
+      - traefik
+    labels:
+      - 'wud.watch=true'
+      - 'wud.watch.digest=true'
+      - 'wud.tag.include=^latest$$'
+      - 'wud.trigger.include=docker.accountmanager'
+      - 'wud.display.name=account-manager-frontend'
+      - 'wud.link.template=https://github.com/cacic-fct/account-manager/pkgs/container/account-manager%2Faccount-frontend'
+      - 'traefik.enable=true'
+      - 'traefik.scope=public'
+      - 'traefik.docker.network=traefik'
+
+      - 'traefik.http.routers.frontend-le.entrypoints=web,websecure'
+      - 'traefik.http.routers.frontend-le.rule=Host(`account.cacic.dev.br`) && PathPrefix(`/app/`)'
+      - 'traefik.http.routers.frontend-le.tls=true'
+      - 'traefik.http.routers.frontend-le.tls.certresolver=letsencrypt'
+      - 'traefik.http.routers.frontend-le.service=frontend-le-svc'
+      - 'traefik.http.services.frontend-le-svc.loadbalancer.server.port=4000'
+
+      - 'traefik.http.routers.acc-frontend-root.entrypoints=web,websecure'
+      - 'traefik.http.routers.acc-frontend-root.rule=Host(`account.cacic.dev.br`) && Path(`/`)'
+      - 'traefik.http.routers.acc-frontend-root.tls=true'
+      - 'traefik.http.routers.acc-frontend-root.tls.certresolver=letsencrypt'
+      - 'traefik.http.routers.acc-frontend-root.middlewares=acc-frontend-redirect-root'
+      - 'traefik.http.routers.acc-frontend-root.service=frontend-le-svc'
+      - 'traefik.http.middlewares.acc-frontend-redirect-root.redirectregex.regex=^https?://([^/]+)/$$'
+      - 'traefik.http.middlewares.acc-frontend-redirect-root.redirectregex.replacement=https://$${1}/app/'
+      - 'traefik.http.middlewares.acc-frontend-redirect-root.redirectregex.permanent=true'
+
+      - 'traefik.http.routers.acc-frontend-app.entrypoints=web,websecure'
+      - 'traefik.http.routers.acc-frontend-app.rule=Host(`account.cacic.dev.br`) && Path(`/app`)'
+      - 'traefik.http.routers.acc-frontend-app.tls=true'
+      - 'traefik.http.routers.acc-frontend-app.tls.certresolver=letsencrypt'
+      - 'traefik.http.routers.acc-frontend-app.middlewares=acc-frontend-redirect-app'
+      - 'traefik.http.routers.acc-frontend-app.service=frontend-le-svc'
+      - 'traefik.http.middlewares.acc-frontend-redirect-app.redirectregex.regex=^https?://([^/]+)/app$$'
+      - 'traefik.http.middlewares.acc-frontend-redirect-app.redirectregex.replacement=https://$${1}/app/'
+      - 'traefik.http.middlewares.acc-frontend-redirect-app.redirectregex.permanent=true'
+
+networks:
+  postgres_network:
+    driver: bridge
+  redis_network:
+    driver: bridge
+  traefik:
+    external: true
