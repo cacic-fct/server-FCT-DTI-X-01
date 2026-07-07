@@ -26,8 +26,8 @@ compose_projects:
   - vaultwarden
   - wud-updater
 
-compose_pull_before_up: false
-compose_remove_orphans: false
+compose_pull_before_up: true
+compose_remove_orphans: true
 
 compose_public_paths_moved_to_secrets:
   - cacic-error-pages/html
