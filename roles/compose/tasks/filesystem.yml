@@ -11,9 +11,6 @@
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
-    owner: root
-    group: root
-    mode: "0755"
   loop:
     - "{{ docker_data_root }}"
 
@@ -21,9 +18,6 @@
   ansible.builtin.file:
     path: "{{ docker_data_root }}/{{ item }}"
     state: directory
-    owner: root
-    group: root
-    mode: "0755"
   loop: "{{ compose_data_directories }}"
 
 - name: Check Docker data file paths
@@ -68,9 +62,6 @@
   ansible.builtin.file:
     path: "{{ docker_data_root }}/{{ item.path | dirname }}"
     state: directory
-    owner: root
-    group: root
-    mode: "0755"
   loop: "{{ compose_data_files | default([]) }}"
   loop_control:
     label: "{{ item.path | dirname }}"
@@ -79,9 +70,6 @@
   ansible.builtin.copy:
     dest: "{{ docker_data_root }}/{{ item.path }}"
     content: ""
-    owner: root
-    group: root
-    mode: "{{ item.mode | default('0644') }}"
     force: false
   loop: "{{ compose_data_files | default([]) }}"
   loop_control:

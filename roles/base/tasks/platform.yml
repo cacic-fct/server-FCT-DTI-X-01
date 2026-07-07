@@ -15,4 +15,8 @@
   loop:
     - "{{ shared_root }}"
     - "{{ docker_compose_root }}"
-    - "{{ docker_data_root }}"
+
+- name: Ensure Docker data root exists
+  ansible.builtin.file:
+    path: "{{ docker_data_root }}"
+    state: directory

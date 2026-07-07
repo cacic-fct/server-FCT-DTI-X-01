@@ -23,8 +23,4 @@
   ansible.builtin.copy:
     src: "{{ playbook_dir }}/docker-data/"
     dest: "{{ docker_data_root }}/"
-    owner: root
-    group: root
-    mode: "0644"
-    directory_mode: "0755"
   when: public_docker_data_source.stat.isdir | default(false)
