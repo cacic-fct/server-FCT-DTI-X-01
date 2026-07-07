@@ -12,5 +12,5 @@ ExecStartPre=/usr/bin/ansible-galaxy collection install community.docker
 {% if ansible_pull_deployment_telemetry_enabled | bool %}
 ExecStart={{ ansible_pull_deployment_telemetry_wrapper_path }}
 {% else %}
-ExecStart=/usr/bin/ansible-pull --url ${ANSIBLE_PULL_REPO} --checkout ${ANSIBLE_PULL_VERSION} --directory ${ANSIBLE_PULL_CHECKOUT} --clean --inventory ${ANSIBLE_PULL_INVENTORY} ${ANSIBLE_PULL_PLAYBOOK}
+ExecStart=/usr/bin/ansible-pull --url ${ANSIBLE_PULL_REPO} --checkout ${ANSIBLE_PULL_VERSION} --directory ${ANSIBLE_PULL_CHECKOUT} --clean --inventory ${ANSIBLE_PULL_INVENTORY}{% if ansible_pull_verbosity | int > 0 %} -{{ 'v' * (ansible_pull_verbosity | int) }}{% endif %}{% if ansible_pull_show_diff | bool %} --diff{% endif %} ${ANSIBLE_PULL_PLAYBOOK}
 {% endif %}

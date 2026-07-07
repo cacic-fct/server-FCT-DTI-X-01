@@ -4,4 +4,27 @@
   args:
     chdir: "{{ docker_compose_root }}/{{ item }}"
   loop: "{{ compose_projects }}"
+  loop_control:
+    label: "{{ docker_compose_root }}/{{ item }}"
+  register: compose_project_config_validation
   changed_when: false
+  failed_when: false
+
+- name: Print failed compose validation details
+  ansible.builtin.debug:
+    msg:
+      - "Docker Compose config validation failed for {{ docker_compose_root }}/{{ item.item }}"
+      - "Exit code: {{ item.rc }}"
+      - "stdout: {{ item.stdout | default('') }}"
+      - "stderr: {{ item.stderr | default('') }}"
+  loop: "{{ compose_project_config_validation.results | selectattr('rc', 'ne', 0) | list }}"
+  loop_control:
+    label: "{{ docker_compose_root }}/{{ item.item }}"
+
+- name: Fail when compose project validation fails
+  ansible.builtin.fail:
+    msg: >-
+      Docker Compose config validation failed for
+      {{ compose_project_config_validation.results | selectattr('rc', 'ne', 0) | map(attribute='item') | join(', ') }}.
+      See the validation stderr above for the exact compose parser error.
+  when: compose_project_config_validation.results | selectattr('rc', 'ne', 0) | list | length > 0

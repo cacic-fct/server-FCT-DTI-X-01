@@ -1,16 +1,47 @@
 ---
-- name: Announce compose project deployment
-  ansible.builtin.debug:
-    msg: "Running docker compose up for services in {{ docker_compose_root }}/{{ compose_project }}"
+- name: Deploy compose project
+  block:
+    - name: Announce compose project deployment
+      ansible.builtin.debug:
+        msg: "Running docker compose up for services in {{ docker_compose_root }}/{{ compose_project }}"
 
-- name: Apply compose project
-  community.docker.docker_compose_v2:
-    project_src: "{{ docker_compose_root }}/{{ compose_project }}"
-    pull: "{{ 'always' if compose_pull_before_up else 'missing' }}"
-    remove_orphans: "{{ compose_remove_orphans | default(false) }}"
-    state: present
-  register: compose_project_apply
+    - name: Apply compose project
+      community.docker.docker_compose_v2:
+        project_src: "{{ docker_compose_root }}/{{ compose_project }}"
+        pull: "{{ 'always' if compose_pull_before_up else 'missing' }}"
+        remove_orphans: "{{ compose_remove_orphans | default(false) }}"
+        state: present
+      register: compose_project_apply
 
-- name: Announce compose project deployment result
-  ansible.builtin.debug:
-    msg: "Docker Compose services in {{ docker_compose_root }}/{{ compose_project }} are up (changed={{ compose_project_apply.changed }})"
+    - name: Announce compose project deployment result
+      ansible.builtin.debug:
+        msg: "Docker Compose services in {{ docker_compose_root }}/{{ compose_project }} are up (changed={{ compose_project_apply.changed }})"
+  rescue:
+    - name: Collect compose project status after failure
+      ansible.builtin.command: docker compose ps --all
+      args:
+        chdir: "{{ docker_compose_root }}/{{ compose_project }}"
+      register: compose_project_failure_status
+      changed_when: false
+      failed_when: false
+
+    - name: Print compose project deployment failure details
+      ansible.builtin.debug:
+        msg:
+          - "Docker Compose deployment failed for {{ docker_compose_root }}/{{ compose_project }}"
+          - "Failed task: {{ ansible_failed_task.name | default('unknown') }}"
+          - "Failure message: {{ ansible_failed_result.msg | default('') }}"
+          - "Exit code: {{ ansible_failed_result.rc | default('unknown') }}"
+          - "stdout: {{ ansible_failed_result.stdout | default('') }}"
+          - "stderr: {{ ansible_failed_result.stderr | default('') }}"
+          - "Compose actions: {{ ansible_failed_result.actions | default([]) }}"
+          - "Compose containers: {{ ansible_failed_result.containers | default([]) }}"
+          - "docker compose ps exit code: {{ compose_project_failure_status.rc | default('unknown') }}"
+          - "docker compose ps stdout: {{ compose_project_failure_status.stdout | default('') }}"
+          - "docker compose ps stderr: {{ compose_project_failure_status.stderr | default('') }}"
+
+    - name: Fail compose project deployment
+      ansible.builtin.fail:
+        msg: >-
+          Docker Compose deployment failed for {{ docker_compose_root }}/{{ compose_project }}.
+          See the diagnostic lines above for the module result and current compose project status.

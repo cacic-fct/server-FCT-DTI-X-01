@@ -2,6 +2,7 @@
 import json
 import os
 import re
+import shlex
 import subprocess
 import sys
 import urllib.error
@@ -19,6 +20,14 @@ def env(name, default=""):
 
 def enabled(value):
     return value.lower() in {"1", "true", "yes", "on"}
+
+
+def env_int(name, default=0):
+    value = env(name, str(default))
+    try:
+        return int(value)
+    except ValueError:
+        return default
 
 
 def repo_owner_name(repo_url):
@@ -135,7 +144,7 @@ def create_status(token, owner, repo, deployment_id, state, description):
 
 
 def ansible_pull_argv():
-    return [
+    argv = [
         "/usr/bin/ansible-pull",
         "--url",
         env("ANSIBLE_PULL_REPO"),
@@ -146,12 +155,82 @@ def ansible_pull_argv():
         "--clean",
         "--inventory",
         env("ANSIBLE_PULL_INVENTORY"),
-        env("ANSIBLE_PULL_PLAYBOOK"),
     ]
+    verbosity = max(0, min(env_int("ANSIBLE_PULL_VERBOSITY", 0), 6))
+    if verbosity:
+        argv.append("-" + ("v" * verbosity))
+    if enabled(env("ANSIBLE_PULL_SHOW_DIFF", "false")):
+        argv.append("--diff")
+    argv.append(env("ANSIBLE_PULL_PLAYBOOK"))
+    return argv
+
+
+def print_diagnostic_command(title, argv, cwd=None):
+    print(f"\n--- {title} ---", file=sys.stderr)
+    print(f"$ {shlex.join(argv)}", file=sys.stderr)
+    try:
+        result = subprocess.run(
+            argv,
+            cwd=cwd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            timeout=60,
+            check=False,
+        )
+    except Exception as exc:
+        print(f"diagnostic command could not run: {exc}", file=sys.stderr)
+        return
+
+    print(f"exit code: {result.returncode}", file=sys.stderr)
+    if result.stdout:
+        print("stdout:", file=sys.stderr)
+        print(result.stdout.rstrip(), file=sys.stderr)
+    if result.stderr:
+        print("stderr:", file=sys.stderr)
+        print(result.stderr.rstrip(), file=sys.stderr)
+
+
+def print_failure_diagnostics(return_code):
+    checkout = env("ANSIBLE_PULL_CHECKOUT")
+    inventory = env("ANSIBLE_PULL_INVENTORY")
+    playbook = env("ANSIBLE_PULL_PLAYBOOK")
+
+    print("\n=== ansible-pull failure diagnostics ===", file=sys.stderr)
+    print(f"exit code: {return_code}", file=sys.stderr)
+    print(f"repo: {env('ANSIBLE_PULL_REPO')}", file=sys.stderr)
+    print(f"ref: {env('ANSIBLE_PULL_VERSION')}", file=sys.stderr)
+    print(f"checkout: {checkout}", file=sys.stderr)
+    print(f"inventory: {inventory}", file=sys.stderr)
+    print(f"playbook: {playbook}", file=sys.stderr)
+    print(f"ansible-pull command: {shlex.join(ansible_pull_argv())}", file=sys.stderr)
+
+    print_diagnostic_command("ansible version", ["/usr/bin/ansible", "--version"])
+    if checkout:
+        print_diagnostic_command("checkout git revision", ["git", "-C", checkout, "rev-parse", "--short", "HEAD"])
+        print_diagnostic_command("checkout git status", ["git", "-C", checkout, "status", "--short"])
+    if checkout and inventory and playbook:
+        print_diagnostic_command(
+            "inventory host match",
+            [
+                "/usr/bin/ansible-playbook",
+                "--inventory",
+                inventory,
+                "--list-hosts",
+                playbook,
+            ],
+            cwd=checkout,
+        )
+    print("=== end ansible-pull failure diagnostics ===\n", file=sys.stderr)
 
 
 def run_ansible_pull():
-    return subprocess.run(ansible_pull_argv()).returncode
+    argv = ansible_pull_argv()
+    print(f"Running ansible-pull: {shlex.join(argv)}", file=sys.stderr, flush=True)
+    return_code = subprocess.run(argv).returncode
+    if return_code != 0:
+        print_failure_diagnostics(return_code)
+    return return_code
 
 
 def warn(message):
