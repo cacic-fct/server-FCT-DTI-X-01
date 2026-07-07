@@ -12,6 +12,9 @@
 - name: Load public configuration deployment
   ansible.builtin.import_tasks: public-config.yml
 
+- name: Load secret Docker data deployment
+  ansible.builtin.import_tasks: secret-docker-data.yml
+
 - name: Load external repository deployment
   ansible.builtin.import_tasks: external-repositories.yml
 
