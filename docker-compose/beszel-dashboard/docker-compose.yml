@@ -35,5 +35,3 @@ services:
 networks:
   traefik:
     external: true
-
-

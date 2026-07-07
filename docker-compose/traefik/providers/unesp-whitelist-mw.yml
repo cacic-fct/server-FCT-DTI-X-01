@@ -10,4 +10,4 @@ http:
           - "200.145.0.0/16"
           - "2801:88::/32"
         ipstrategy:
-           depth: 1
+          depth: 1

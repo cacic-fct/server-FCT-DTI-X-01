@@ -30,8 +30,8 @@ services:
       - "traefik.http.routers.umami.service=umami-svc"
       - "traefik.http.services.umami-svc.loadbalancer.server.port=3000"
     networks:
-    - default
-    - traefik
+      - default
+      - traefik
 
   db:
     image: postgres:16-alpine
