@@ -7,7 +7,7 @@ compose_data_directories:
   - cacic-account/redis_data
   - cacic-event-manager/db
   - cacic-event-manager/redis
-  - cacic-novu/mongodb
+  - novu/mongodb
   - crowdsec/opt/crowdsec
   - crowdsec/opt/crowdsec-db
   - crowdsec/traefikLogs

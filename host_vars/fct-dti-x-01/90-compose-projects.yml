@@ -12,7 +12,7 @@ compose_projects:
   - uptime-kuma
   - beszel-dashboard
   - seaweedfs
-  - cacic-novu
+  - novu
   - cacic-account-manager
   - cacic-email-templates
   - cacic-event-manager
@@ -36,7 +36,7 @@ compose_public_paths_moved_to_secrets:
 compose_required_secret_overlay_files:
   - cacic-account-manager/.env
   - cacic-event-manager/.env
-  - cacic-novu/.env
+  - novu/.env
   - keycloak/.env
   - seaweedfs/.env
   - seaweedfs/etc/seaweed/filer.toml
