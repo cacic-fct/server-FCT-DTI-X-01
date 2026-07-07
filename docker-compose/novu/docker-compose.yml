@@ -29,7 +29,7 @@ services:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
     volumes:
-      - /home/shared/docker-data/cacic-novu/mongodb:/data/db
+      - /home/shared/docker-data/novu/mongodb:/data/db
     healthcheck:
       test:
         [
@@ -101,11 +101,7 @@ services:
       IS_SELF_HOSTED: ${IS_SELF_HOSTED}
       DISABLE_USER_REGISTRATION: true
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "wget --no-verbose --tries=1 --spider http://localhost:$${PORT}/v1/health-check || exit 0",
-        ]
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:$${PORT}/v1/health-check || exit 0"]
       interval: 20s
       timeout: 10s
       retries: 3
@@ -171,10 +167,7 @@ services:
       NOVU_BRIDGE_URL: http://api:${API_PORT}/api
     healthcheck:
       test:
-        [
-          "CMD-SHELL",
-          "wget --no-verbose --tries=1 --spider http://localhost:$${PORT:-3004}/v1/health-check || exit 1",
-        ]
+        ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:$${PORT:-3004}/v1/health-check || exit 1"]
       interval: 20s
       timeout: 10s
       retries: 3
@@ -218,11 +211,7 @@ services:
       NEW_RELIC_APP_NAME: ${NEW_RELIC_APP_NAME}
       NEW_RELIC_LICENSE_KEY: ${NEW_RELIC_LICENSE_KEY}
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "wget --no-verbose --tries=1 --spider http://localhost:$${PORT}/ws/v1/health-check || exit 1",
-        ]
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:$${PORT}/ws/v1/health-check || exit 1"]
       interval: 20s
       timeout: 10s
       retries: 3
