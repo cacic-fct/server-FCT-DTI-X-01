@@ -5,6 +5,9 @@
 - name: Load package management
   ansible.builtin.import_tasks: packages.yml
 
+- name: Load time synchronization
+  ansible.builtin.import_tasks: time.yml
+
 - name: Load access compliance checks
   ansible.builtin.import_tasks: access-compliance.yml
 

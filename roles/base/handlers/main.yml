@@ -5,6 +5,11 @@
     state: restarted
   failed_when: false
 
+- name: Restart systemd-timesyncd
+  ansible.builtin.service:
+    name: systemd-timesyncd
+    state: restarted
+
 - name: Reload systemd
   ansible.builtin.systemd:
     daemon_reload: true

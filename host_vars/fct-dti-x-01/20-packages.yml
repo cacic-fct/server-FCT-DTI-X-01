@@ -14,6 +14,7 @@ server_base_packages:
   - python3-apt
   - python3-debian
   - rsync
+  - systemd-timesyncd
   - unattended-upgrades
   - zram-tools
   - zsh
