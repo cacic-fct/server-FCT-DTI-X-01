@@ -4,6 +4,7 @@ services:
     restart: unless-stopped
     volumes:
       - /home/shared/docker-data/cacic-error-pages/html:/usr/share/nginx/html
+      - ./404-nginx.conf:/etc/nginx/conf.d/default.conf:ro
     networks:
       - traefik
     labels:
@@ -12,6 +13,12 @@ services:
       - "traefik.http.routers.errorpages.priority=1"
       - "traefik.http.routers.errorpages.service=errorpages-svc"
       - "traefik.http.services.errorpages-svc.loadBalancer.server.port=80"
+
+      - "traefik.http.routers.catch-all-404.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.catch-all-404.entrypoints=websecure"
+      - "traefik.http.routers.catch-all-404.priority=1"
+      - "traefik.http.routers.catch-all-404.tls=true"
+
 networks:
   traefik:
     external: true
