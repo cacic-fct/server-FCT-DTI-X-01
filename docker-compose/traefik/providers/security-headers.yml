@@ -2,7 +2,8 @@ http:
   middlewares:
     security-headers:
       headers:
-        frameDeny: true
+        # Keycloak requires iframes to be allowed, so we cannot use the frameDeny option.
+        # frameDeny: true
         browserXssFilter: true
         stsSeconds: 31536000
         stsIncludeSubdomains: true
