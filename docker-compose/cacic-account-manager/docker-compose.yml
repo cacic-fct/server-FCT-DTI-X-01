@@ -10,10 +10,35 @@ services:
     command:
       - postgres
       - -c
-      - config_file=/etc/postgresql/postgresql.conf
+      - shared_buffers=512MB
+      - -c
+      - effective_cache_size=1536MB
+      - -c
+      - maintenance_work_mem=128MB
+      - -c
+      - checkpoint_completion_target=0.9
+      - -c
+      - wal_buffers=16MB
+      - -c
+      - default_statistics_target=100
+      - -c
+      - random_page_cost=4
+      - -c
+      - effective_io_concurrency=2
+      - -c
+      - work_mem=4MB
+      - -c
+      - huge_pages=off
+      - -c
+      - jit=off
+      - -c
+      - wal_compression=lz4
+      - -c
+      - min_wal_size=1GB
+      - -c
+      - max_wal_size=4GB
     volumes:
       - /home/shared/docker-data/cacic-account-manager/postgres_data:/var/lib/postgresql
-      - ./postgresql.conf:/etc/postgresql/postgresql.conf:ro
     healthcheck:
       test: ["CMD-SHELL", 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
       interval: 10s
