@@ -18,15 +18,21 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v7
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
+          cache: pip
+          cache-dependency-path: requirements-ci.txt
+
+      - uses: actions/cache@v6
+        with:
+          path: ~/.ansible/collections
+          key: ansible-galaxy-${{ runner.os }}-${{ hashFiles('requirements.yml') }}
 
       - name: Install validation tools
         run: |
           python -m pip install --upgrade pip
-          python -m pip install ansible ansible-lint pyyaml
+          python -m pip install -r requirements-ci.txt
           ansible-galaxy collection install -r requirements.yml
 
       - name: Validate YAML syntax
