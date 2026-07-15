@@ -139,7 +139,7 @@ services:
       - traefik.http.routers.devbr-redirect.middlewares=devbr-to-combr
 
       - traefik.http.middlewares.devbr-to-combr.redirectregex.regex=^https://([^.]+)\.cacic\.dev\.br(/.*)?$
-      - traefik.http.middlewares.devbr-to-combr.redirectregex.replacement=https://${1}.cacic.com.br${2}
+      - traefik.http.middlewares.devbr-to-combr.redirectregex.replacement=https://$${1}.cacic.com.br$${2}
       - traefik.http.middlewares.devbr-to-combr.redirectregex.permanent=true
 
 networks:
