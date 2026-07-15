@@ -142,6 +142,16 @@ services:
       - traefik.http.middlewares.devbr-to-combr.redirectregex.replacement=https://$${1}cacic.com.br$${2}
       - traefik.http.middlewares.devbr-to-combr.redirectregex.permanent=true
 
+      - traefik.http.routers.events-docs-redirect.rule=Host(`docs.fctapp.cacic.dev.br`)
+      - traefik.http.routers.events-docs-redirect.entrypoints=websecure
+      - traefik.http.routers.events-docs-redirect.tls=true
+      - traefik.http.routers.events-docs-redirect.priority=2000
+      - traefik.http.routers.events-docs-redirect.middlewares=events-docs-redirect
+
+      - traefik.http.middlewares.events-docs-redirect.redirectregex.regex=^https://docs\.fctapp\.cacic\.dev\.br(/.*)?$$
+      - traefik.http.middlewares.events-docs-redirect.redirectregex.replacement=https://docs.eventos.cacic.com.br$${1}
+      - traefik.http.middlewares.events-docs-redirect.redirectregex.permanent=true
+
 networks:
   traefik:
     external: true
