@@ -15,7 +15,7 @@ services:
       - "traefik.enable=true"
       # Router
       - "traefik.http.routers.email-templates.entryPoints=web, websecure"
-      - "traefik.http.routers.email-templates.rule=Host(`emails.cacic.dev.br`)"
+      - "traefik.http.routers.email-templates.rule=Host(`emails.cacic.com.br`)"
       - "traefik.http.routers.email-templates.tls=true"
       - "traefik.http.routers.email-templates.tls.certResolver=letsencrypt"
       # HTTP Service
@@ -23,7 +23,7 @@ services:
       - "traefik.http.services.email-templates-svc.loadBalancer.passHostHeader=true"
       # Middlewares
       - "traefik.http.routers.email-templates.middlewares=email-templates-csp-mw"
-      - "traefik.http.middlewares.email-templates-csp-mw.headers.contentSecurityPolicy=default-src 'self' cacic.dev.br; img-src *; style-src 'unsafe-inline'; object-src 'none'; script-src 'self' 'unsafe-inline'"
+      - "traefik.http.middlewares.email-templates-csp-mw.headers.contentSecurityPolicy=default-src 'self' cacic.com.br; img-src *; style-src 'unsafe-inline'; object-src 'none'; script-src 'self' 'unsafe-inline'"
 
 networks:
   traefik:

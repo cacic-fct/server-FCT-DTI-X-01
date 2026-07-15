@@ -6,7 +6,7 @@ services:
     env_file:
       - secrets.env
     environment:
-      DOMAIN: "https://senhas.cacic.dev.br" # required when using a reverse proxy; your domain; vaultwarden needs to know it's https to work properly with attachments
+      DOMAIN: "https://senhas.cacic.com.br" # required when using a reverse proxy; your domain; vaultwarden needs to know it's https to work properly with attachments
       SIGNUPS_ALLOWED: "false" # Deactivate this with "false" after you have created your account so that no strangers can register
       PUSH_ENABLED: "true"
     volumes:
@@ -19,7 +19,7 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
       - "traefik.http.routers.vaultwarden.entryPoints=websecure, web"
-      - "traefik.http.routers.vaultwarden.rule=Host(`senhas.cacic.dev.br`)"
+      - "traefik.http.routers.vaultwarden.rule=Host(`senhas.cacic.com.br`)"
       - "traefik.http.routers.vaultwarden.tls=true"
       - "traefik.http.routers.vaultwarden.tls.certResolver=letsencrypt"
       - "traefik.http.routers.vaultwarden.service=vaultwarden-svc"

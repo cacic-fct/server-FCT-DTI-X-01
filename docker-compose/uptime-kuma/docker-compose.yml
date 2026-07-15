@@ -15,7 +15,7 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
       - "traefik.http.routers.kuma.entryPoints=websecure, web"
-      - "traefik.http.routers.kuma.rule=Host(`status.cacic.dev.br`)"
+      - "traefik.http.routers.kuma.rule=Host(`status.cacic.com.br`)"
       - "traefik.http.routers.kuma.tls=true"
       - "traefik.http.routers.kuma.tls.certResolver=letsencrypt"
       - "traefik.http.routers.kuma.service=kuma-svc"

@@ -315,9 +315,9 @@ docker compose -f docker-compose/traefik/docker-compose.yml config --quiet
 
 ## Referências
 
-- [FCT-DTI-X-01](https://cacic.dev.br/docs/Recursos/Servidores/FCT-DTI-X-01)
-- [Especificações comuns](https://cacic.dev.br/docs/Recursos/Servidores/Especifica%C3%A7%C3%B5es%20comuns)
-- [Organização de arquivos](https://cacic.dev.br/docs/Recursos/Servidores/FCT-DTI-X-01/Organiza%C3%A7%C3%A3o%20de%20arquivos)
-- [Firewall](https://cacic.dev.br/docs/Recursos/Servidores/FCT-DTI-X-01/Rede/Firewall)
-- [Pacotes](https://cacic.dev.br/docs/Recursos/Servidores/FCT-DTI-X-01/HW%20e%20SW/Pacotes)
-- [Sistema operacional](https://cacic.dev.br/docs/Recursos/Servidores/FCT-DTI-X-01/HW%20e%20SW/Sistema%20operacional)
+- [FCT-DTI-X-01](https://cacic.com.br/docs/Recursos/Servidores/FCT-DTI-X-01)
+- [Especificações comuns](https://cacic.com.br/docs/Recursos/Servidores/Especifica%C3%A7%C3%B5es%20comuns)
+- [Organização de arquivos](https://cacic.com.br/docs/Recursos/Servidores/FCT-DTI-X-01/Organiza%C3%A7%C3%A3o%20de%20arquivos)
+- [Firewall](https://cacic.com.br/docs/Recursos/Servidores/FCT-DTI-X-01/Rede/Firewall)
+- [Pacotes](https://cacic.com.br/docs/Recursos/Servidores/FCT-DTI-X-01/HW%20e%20SW/Pacotes)
+- [Sistema operacional](https://cacic.com.br/docs/Recursos/Servidores/FCT-DTI-X-01/HW%20e%20SW/Sistema%20operacional)

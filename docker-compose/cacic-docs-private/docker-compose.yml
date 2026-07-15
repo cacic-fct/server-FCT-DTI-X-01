@@ -10,7 +10,7 @@ services:
       - "traefik.enable=true"
       # Router
       - "traefik.http.routers.docs-private.entryPoints=web, websecure"
-      - "traefik.http.routers.docs-private.rule=Host(`docs.cacic.dev.br`)"
+      - "traefik.http.routers.docs-private.rule=Host(`docs.cacic.com.br`)"
       - "traefik.http.routers.docs-private.tls=true"
       - "traefik.http.routers.docs-private.tls.certResolver=letsencrypt"
       # HTTP Service
@@ -39,7 +39,7 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
       - "traefik.http.routers.docs-private-watchtower.entryPoints=websecure"
-      - "traefik.http.routers.docs-private-watchtower.rule=Host(`watchtower.cacic.dev.br`) && PathPrefix(`/cacic-docs-private`)"
+      - "traefik.http.routers.docs-private-watchtower.rule=Host(`watchtower.cacic.com.br`) && PathPrefix(`/cacic-docs-private`)"
       - "traefik.http.routers.docs-private-watchtower.tls=true"
       - "traefik.http.routers.docs-private-watchtower.tls.certResolver=letsencrypt"
       - "traefik.http.routers.docs-private-watchtower.service=docs-private-watchtower-svc"

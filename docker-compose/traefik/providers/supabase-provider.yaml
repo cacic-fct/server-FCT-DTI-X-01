@@ -10,7 +10,7 @@ http:
     supabase-kong:
       entryPoints:
         - websecure
-      rule: "Host(`supabase-fctapp.cacic.dev.br`)"
+      rule: "Host(`supabase-fctapp.cacic.com.br`)"
       service: supabase-kong
       middlewares:
         - "securityHeaders"
@@ -21,7 +21,7 @@ http:
     supabase-analytics:
       entryPoints:
         - websecure
-      rule: "Host(`analytics-supabase-fctapp.cacic.dev.br`)"
+      rule: "Host(`analytics-supabase-fctapp.cacic.com.br`)"
       service: supabase-analytics
       middlewares:
         - "securityHeaders"

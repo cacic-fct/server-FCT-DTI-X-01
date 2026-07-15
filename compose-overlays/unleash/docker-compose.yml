@@ -40,7 +40,7 @@ services:
       - traefik.enable=true
       - traefik.docker.network=traefik
       - traefik.http.routers.unleash-dashboard.entrypoints=web,websecure
-      - traefik.http.routers.unleash-dashboard.rule=Host(`unleash.cacic.dev.br`)
+      - traefik.http.routers.unleash-dashboard.rule=Host(`unleash.cacic.com.br`)
       - traefik.http.routers.unleash-dashboard.tls=true
       - traefik.http.routers.unleash-dashboard.tls.certresolver=letsencrypt
       - traefik.http.routers.unleash-dashboard.middlewares=unleash-dashboard-strip-prefix
@@ -62,14 +62,7 @@ services:
     volumes:
       - /home/shared/docker-data/unleash/postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test:
-        [
-          "CMD",
-          "pg_isready",
-          "--username=postgres",
-          "--host=127.0.0.1",
-          "--port=5432",
-        ]
+      test: ["CMD", "pg_isready", "--username=postgres", "--host=127.0.0.1", "--port=5432"]
       interval: 2s
       timeout: 1m
       retries: 5

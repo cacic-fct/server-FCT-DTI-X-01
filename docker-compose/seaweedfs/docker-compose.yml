@@ -93,7 +93,7 @@ services:
       - "wud.link.template=https://github.com/seaweedfs/seaweedfs/pkgs/container/seaweedfs"
       - "traefik.enable=true"
       - "traefik.scope=public"
-      - "traefik.http.routers.seaweed-admin.rule=Host(`storage.cacic.dev.br`)"
+      - "traefik.http.routers.seaweed-admin.rule=Host(`storage.cacic.com.br`)"
       - "traefik.http.routers.seaweed-admin.entrypoints=web, websecure"
       - "traefik.http.routers.seaweed-admin.service=seaweed-admin"
       - "traefik.http.services.seaweed-admin.loadbalancer.server.port=23646"
@@ -133,7 +133,7 @@ services:
       - "wud.link.template=https://github.com/seaweedfs/seaweedfs/pkgs/container/seaweedfs"
       - "traefik.enable=true"
       - "traefik.scope=public"
-      - "traefik.http.routers.seaweed-s3.rule=Host(`s3.cacic.dev.br`)"
+      - "traefik.http.routers.seaweed-s3.rule=Host(`s3.cacic.com.br`)"
       - "traefik.http.routers.seaweed-s3.entrypoints=web, websecure"
       - "traefik.http.routers.seaweed-s3.service=seaweed-s3"
       - "traefik.http.middlewares.s3-headers.headers.customResponseHeaders.Transfer-Encoding="
@@ -142,7 +142,7 @@ services:
       - "traefik.http.routers.seaweed-s3.tls=true"
       - "traefik.http.routers.seaweed-s3.tls.certResolver=letsencrypt"
       - "traefik.http.services.seaweed-s3.loadbalancer.passhostheader=true"
-      - "traefik.http.middlewares.s3-headers.headers.customRequestHeaders.Host=s3.cacic.dev.br"
+      - "traefik.http.middlewares.s3-headers.headers.customRequestHeaders.Host=s3.cacic.com.br"
       - "traefik.docker.network=traefik"
     networks:
       - traefik

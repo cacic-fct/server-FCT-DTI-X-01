@@ -1,6 +1,6 @@
 ---
 server_id: FCT-DTI-X-01
-server_docs_url: https://cacic.dev.br/docs/Recursos/Servidores/FCT-DTI-X-01
+server_docs_url: https://cacic.com.br/docs/Recursos/Servidores/FCT-DTI-X-01
 
 shared_root: /home/shared
 docker_compose_root: "{{ shared_root }}/docker-compose"

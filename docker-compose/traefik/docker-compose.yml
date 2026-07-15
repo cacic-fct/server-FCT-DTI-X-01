@@ -31,8 +31,8 @@ services:
       # Setup HTTPS
       - "--entrypoints.websecure.address=:443"
       - "--entrypoints.websecure.http.tls.certresolver=letsencrypt"
-      - "--entrypoints.websecure.http.tls.domains[0].main=cacic.dev.br"
-      - "--entrypoints.websecure.http.tls.domains[0].sans=*.cacic.dev.br"
+      - "--entrypoints.websecure.http.tls.domains[0].main=cacic.com.br"
+      - "--entrypoints.websecure.http.tls.domains[0].sans=*.cacic.com.br"
       ## HTTP/3
       - "--entrypoints.websecure.http3"
       ## Middlewares comuns para todos os serviços
@@ -93,14 +93,14 @@ services:
 
       # Dashboard
       - "traefik.http.routers.dashboard.entryPoints=websecure"
-      - "traefik.http.routers.dashboard.rule=Host(`traefik.cacic.dev.br`)"
+      - "traefik.http.routers.dashboard.rule=Host(`traefik.cacic.com.br`)"
       - "traefik.http.routers.dashboard.service=api@internal"
       - "traefik.http.routers.dashboard.tls.certResolver=letsencrypt"
       - "traefik.http.services.dashboard.loadbalancer.server.port=8080"
       - "traefik.http.routers.dashboard.middlewares=authentik@docker, dashboard-redirect"
       ## Redirect acesso sem path para /dashboard
-      - "traefik.http.middlewares.dashboard-redirect.redirectregex.regex=^https://traefik.cacic.dev.br$$"
-      - "traefik.http.middlewares.dashboard-redirect.redirectregex.replacement=https://traefik.cacic.dev.br/dashboard"
+      - "traefik.http.middlewares.dashboard-redirect.redirectregex.regex=^https://traefik.cacic.com.br$$"
+      - "traefik.http.middlewares.dashboard-redirect.redirectregex.replacement=https://traefik.cacic.com.br/dashboard"
       - "traefik.http.middlewares.dashboard-redirect.redirectregex.permanent=true"
 
       # Negar acesso direto pelo IP
@@ -110,12 +110,12 @@ services:
       - "traefik.http.routers.unespEntryPointIp.tls.certResolver=letsencrypt-ip-http"
       - "traefik.http.routers.unespEntryPointIp.tls.options=directIp@file"
 
-      # Redirect 38a.fct.unesp.br e fct-dti-x-01.cacic.dev.br para a documentação do servidor
-      - "traefik.http.routers.unespEntryPoint.rule=Host(`38a.fct.unesp.br`) || Host(`fct-dti-x-01.cacic.dev.br`)"
+      # Redirect 38a.fct.unesp.br e fct-dti-x-01.cacic.com.br para a documentação do servidor
+      - "traefik.http.routers.unespEntryPoint.rule=Host(`38a.fct.unesp.br`) || Host(`fct-dti-x-01.cacic.com.br`)"
       - "traefik.http.routers.unespEntryPoint.middlewares=unespEntryPoint-dos, unespEntryPoint-dos-req, redirectToDocs"
       - "traefik.http.routers.unespEntryPoint.entrypoints=web, websecure"
       - "traefik.http.middlewares.redirectToDocs.redirectregex.regex=.*"
-      - "traefik.http.middlewares.redirectToDocs.redirectregex.replacement=https://cacic.dev.br/docs/Recursos/Servidores/FCT-DTI-X-01"
+      - "traefik.http.middlewares.redirectToDocs.redirectregex.replacement=https://cacic.com.br/docs/Recursos/Servidores/FCT-DTI-X-01"
       - "traefik.http.routers.unespEntryPoint.tls.certResolver=letsencrypt"
       ## Rate limit, por excesso de cautela
       - "traefik.http.middlewares.unespEntryPoint-dos-req.inflightreq.amount=3"
@@ -123,11 +123,11 @@ services:
       - "traefik.http.middlewares.unespEntryPoint-dos.ratelimit.burst=3"
       - "traefik.http.middlewares.unespEntryPoint-dos.ratelimit.sourcecriterion.requestheadername=X-Forwarded-Host"
 
-      # Redirect live.cacic.dev.br para cacic.dev.br
-      - "traefik.http.routers.liveEntryPoint.rule=Host(`live.cacic.dev.br`)"
+      # Redirect live.cacic.com.br para cacic.com.br
+      - "traefik.http.routers.liveEntryPoint.rule=Host(`live.cacic.com.br`)"
       - "traefik.http.routers.liveEntryPoint.middlewares=redirectLive"
       - "traefik.http.middlewares.redirectLive.redirectregex.regex=.*"
-      - "traefik.http.middlewares.redirectLive.redirectregex.replacement=https://cacic.dev.br/live"
+      - "traefik.http.middlewares.redirectLive.redirectregex.replacement=https://cacic.com.br/live"
       - "traefik.http.middlewares.redirectLive.redirectregex.permanent=true"
       - "traefik.http.routers.liveEntryPoint.entrypoints=web, websecure"
 

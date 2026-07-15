@@ -38,7 +38,7 @@ services:
       - "traefik.scope=public"
       - "traefik.docker.network=traefik"
       - "traefik.http.routers.keycloak.entryPoints=web, websecure"
-      - "traefik.http.routers.keycloak.rule=Host(`sso.cacic.dev.br`) || Host(`sso-admin.cacic.dev.br`)"
+      - "traefik.http.routers.keycloak.rule=Host(`sso.cacic.com.br`) || Host(`sso-admin.cacic.com.br`)"
       - "traefik.http.routers.keycloak.tls=true"
       - "traefik.http.routers.keycloak.tls.certResolver=letsencrypt"
       - "traefik.http.routers.keycloak.service=keycloak-svc"

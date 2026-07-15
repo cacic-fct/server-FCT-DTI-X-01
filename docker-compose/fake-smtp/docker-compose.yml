@@ -11,7 +11,7 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
       - "traefik.http.routers.fake-smtp.entryPoints=websecure, web"
-      - "traefik.http.routers.fake-smtp.rule=Host(`smtp.cacic.dev.br`)"
+      - "traefik.http.routers.fake-smtp.rule=Host(`smtp.cacic.com.br`)"
       - "traefik.http.routers.fake-smtp.tls=true"
       - "traefik.http.routers.fake-smtp.tls.certResolver=letsencrypt"
       - "traefik.http.routers.fake-smtp.middlewares=authentik@docker"

@@ -28,7 +28,7 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
       - "traefik.http.routers.immich.entryPoints=websecure, web"
-      - "traefik.http.routers.immich.rule=Host(`fotos.cacic.dev.br`)"
+      - "traefik.http.routers.immich.rule=Host(`fotos.cacic.com.br`)"
       - "traefik.http.routers.immich.tls=true"
       - "traefik.http.routers.immich.tls.certResolver=letsencrypt"
       - "traefik.http.routers.immich.service=immich-svc"

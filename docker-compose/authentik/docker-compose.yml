@@ -44,7 +44,7 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
       - "traefik.http.routers.authentik.entryPoints=websecure, web"
-      - 'traefik.http.routers.authentik.rule=Host(`auth.cacic.dev.br`)  || HostRegexp(`{subdomain:[A-Za-z0-9](?:[A-Za-z0-9\-]{0,61}[A-Za-z0-9])?}.cacic.dev.br`) && PathPrefix(`/outpost.goauthentik.io/`)'
+      - 'traefik.http.routers.authentik.rule=Host(`auth.cacic.com.br`)  || HostRegexp(`{subdomain:[A-Za-z0-9](?:[A-Za-z0-9\-]{0,61}[A-Za-z0-9])?}.cacic.com.br`) && PathPrefix(`/outpost.goauthentik.io/`)'
       - "traefik.http.routers.authentik.tls=true"
       - "traefik.http.routers.authentik.tls.certResolver=letsencrypt"
       - "traefik.http.routers.authentik.service=authentik-svc"

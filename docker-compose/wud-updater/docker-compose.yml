@@ -31,7 +31,7 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
       - "traefik.http.routers.wud-updater.entryPoints=websecure, web"
-      - "traefik.http.routers.wud-updater.rule=Host(`wud.cacic.dev.br`)"
+      - "traefik.http.routers.wud-updater.rule=Host(`wud.cacic.com.br`)"
       - "traefik.http.routers.wud-updater.tls=true"
       - "traefik.http.routers.wud-updater.tls.certResolver=letsencrypt"
       - "traefik.http.routers.wud-updater.service=wud-updater-svc"

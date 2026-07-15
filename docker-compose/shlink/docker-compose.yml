@@ -6,7 +6,7 @@ services:
     env_file:
       - backend.secrets.env
     environment:
-      - DEFAULT_DOMAIN=s.cacic.dev.br
+      - DEFAULT_DOMAIN=s.cacic.com.br
       - BASE_PATH=/s
       - IS_HTTPS_ENABLED=true
       - PORT=8081
@@ -18,7 +18,7 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
       - "traefik.http.routers.shlink-backend.entryPoints=websecure, web"
-      - 'traefik.http.routers.shlink-backend.rule=Host(`s.cacic.dev.br`) && (PathPrefix(`/s/`) || PathRegexp(`^\/s$`))'
+      - 'traefik.http.routers.shlink-backend.rule=Host(`s.cacic.com.br`) && (PathPrefix(`/s/`) || PathRegexp(`^\/s$`))'
       - "traefik.http.routers.shlink-backend.tls=true"
       - "traefik.http.routers.shlink-backend.tls.certResolver=letsencrypt"
       - "traefik.http.routers.shlink-backend.service=shlink-backend-svc"
@@ -46,12 +46,12 @@ services:
     env_file:
       - web.secrets.env
     environment:
-      - SHLINK_SERVER_URL=https://s.cacic.dev.br/s
+      - SHLINK_SERVER_URL=https://s.cacic.com.br/s
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
       - "traefik.http.routers.shlink-frontend.entryPoints=websecure, web"
-      - "traefik.http.routers.shlink-frontend.rule=Host(`s.cacic.dev.br`)"
+      - "traefik.http.routers.shlink-frontend.rule=Host(`s.cacic.com.br`)"
       - "traefik.http.routers.shlink-frontend.tls=true"
       - "traefik.http.routers.shlink-frontend.tls.certResolver=letsencrypt"
       - "traefik.http.routers.shlink-frontend.service=shlink-frontend-svc"

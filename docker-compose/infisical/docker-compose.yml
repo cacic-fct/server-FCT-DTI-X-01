@@ -19,7 +19,7 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
       - "traefik.http.routers.infisical.entryPoints=websecure"
-      - "traefik.http.routers.infisical.rule=Host(`secrets.cacic.dev.br`)"
+      - "traefik.http.routers.infisical.rule=Host(`secrets.cacic.com.br`)"
       - "traefik.http.routers.infisical.tls=true"
       - "traefik.http.routers.infisical.tls.certResolver=letsencrypt"
       - "traefik.http.services.infisical-svc.loadbalancer.server.port=8080"
