@@ -145,6 +145,7 @@ services:
       - traefik.http.routers.events-docs-redirect.rule=Host(`docs.fctapp.cacic.dev.br`)
       - traefik.http.routers.events-docs-redirect.entrypoints=websecure
       - traefik.http.routers.events-docs-redirect.tls=true
+      - traefik.http.routers.events-docs-redirect.tls.certresolver=letsencrypt
       - traefik.http.routers.events-docs-redirect.priority=2000
       - traefik.http.routers.events-docs-redirect.middlewares=events-docs-redirect
 
