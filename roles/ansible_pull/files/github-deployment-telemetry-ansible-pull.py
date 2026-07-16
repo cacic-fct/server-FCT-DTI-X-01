@@ -109,10 +109,10 @@ def github_token():
     return result.stdout.strip()
 
 
-def create_deployment(token, owner, repo):
+def create_deployment(token, owner, repo, revision):
     environment = env("GITHUB_DEPLOYMENT_ENVIRONMENT", "production")
     payload = {
-        "ref": env("GITHUB_DEPLOYMENT_REF", env("ANSIBLE_PULL_VERSION", "production")),
+        "ref": revision,
         "environment": environment,
         "description": f"Apply {environment} on {env('SERVER_ID', 'server')}",
         "auto_merge": False,
@@ -233,55 +233,80 @@ def run_ansible_pull():
     return return_code
 
 
+def checkout_revision():
+    checkout = env("ANSIBLE_PULL_CHECKOUT")
+    if not checkout:
+        return None
+
+    result = subprocess.run(
+        ["git", "-C", checkout, "rev-parse", "HEAD"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        return None
+    return result.stdout.strip() or None
+
+
 def warn(message):
     print(f"GitHub deployment telemetry warning: {message}", file=sys.stderr)
 
 
-def main():
-    if not enabled(env("GITHUB_DEPLOYMENT_TELEMETRY_ENABLED", "false")):
-        return run_ansible_pull()
-
-    token = None
-    owner = None
-    repo = None
-    deployment_id = None
-
+def report_deployment(revision, state, description):
     try:
-        owner, repo = repo_owner_name(env("GITHUB_DEPLOYMENT_REPO", env("ANSIBLE_PULL_REPO")))
+        owner, repo = repo_owner_name(
+            env("GITHUB_DEPLOYMENT_REPO", env("ANSIBLE_PULL_REPO"))
+        )
         token = github_token()
-        deployment = create_deployment(token, owner, repo)
-        deployment_id = deployment["id"]
+        deployment = create_deployment(token, owner, repo, revision)
         create_status(
             token,
             owner,
             repo,
-            deployment_id,
-            "in_progress",
-            "ansible-pull started applying this ref",
+            deployment["id"],
+            state,
+            description,
         )
     except Exception as exc:
-        warn(f"could not create an in-progress deployment telemetry record: {exc}")
-        return run_ansible_pull()
+        warn(f"could not report deployment telemetry: {exc}")
+
+
+def main():
+    telemetry_enabled = enabled(env("GITHUB_DEPLOYMENT_TELEMETRY_ENABLED", "false"))
+    previous_revision = checkout_revision() if telemetry_enabled else None
 
     try:
         return_code = run_ansible_pull()
     except Exception as exc:
-        try:
-            create_status(token, owner, repo, deployment_id, "error", f"ansible-pull wrapper errored: {exc}")
-        except Exception as status_exc:
-            warn(f"could not mark deployment as error: {status_exc}")
+        current_revision = checkout_revision() if telemetry_enabled else None
+        if current_revision and current_revision != previous_revision:
+            report_deployment(
+                current_revision,
+                "error",
+                f"ansible-pull wrapper errored: {exc}",
+            )
         raise
 
-    state = "success" if return_code == 0 else "failure"
-    description = (
+    if not telemetry_enabled:
+        return return_code
+
+    current_revision = checkout_revision()
+    if not current_revision or current_revision == previous_revision:
+        print(
+            "Skipping GitHub deployment telemetry: ansible-pull checkout revision is unchanged.",
+            file=sys.stderr,
+        )
+        return return_code
+
+    report_deployment(
+        current_revision,
+        "success" if return_code == 0 else "failure",
         "ansible-pull finished successfully"
         if return_code == 0
-        else f"ansible-pull failed with exit code {return_code}"
+        else f"ansible-pull failed with exit code {return_code}",
     )
-    try:
-        create_status(token, owner, repo, deployment_id, state, description)
-    except Exception as exc:
-        warn(f"could not mark deployment as {state}: {exc}")
 
     return return_code
 

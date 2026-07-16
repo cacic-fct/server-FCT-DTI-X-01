@@ -4,7 +4,6 @@ ansible_pull_verbosity: 2
 ansible_pull_show_diff: true
 ansible_pull_deployment_telemetry_wrapper_path: /usr/local/libexec/ansible-pull/github-deployment-telemetry-ansible-pull
 ansible_pull_deployment_telemetry_repo_url: "{{ ansible_pull_repo_url }}"
-ansible_pull_deployment_telemetry_ref: "{{ ansible_pull_repo_version }}"
 ansible_pull_deployment_telemetry_environment: production
 ansible_pull_deployment_telemetry_environment_url: ""
 ansible_pull_deployment_telemetry_log_url: ""

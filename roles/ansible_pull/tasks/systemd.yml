@@ -4,7 +4,6 @@
     that:
       - ansible_pull_deployment_telemetry_wrapper_path | length > 0
       - ansible_pull_deployment_telemetry_repo_url is match('^(https://github\\.com/|git@github\\.com:).+/.+(\\.git)?$')
-      - ansible_pull_deployment_telemetry_ref | length > 0
       - ansible_pull_deployment_telemetry_environment | length > 0
       - ansible_pull_deployment_telemetry_token_helper_path | length > 0
       - ansible_pull_deployment_telemetry_app_private_key_path | length > 0
@@ -14,7 +13,7 @@
     fail_msg: >-
       GitHub deployment telemetry is enabled but not fully configured. Disable
       ansible_pull_deployment_telemetry_enabled or configure the GitHub App
-      token helper, app id/slug, private key, repository, ref, and environment.
+      token helper, app id/slug, private key, repository, and environment.
   when: ansible_pull_deployment_telemetry_enabled | bool
 
 - name: Ensure ansible-pull helper directory exists
