@@ -125,33 +125,35 @@ services:
 
       # Redirect live.cacic.com.br para cacic.com.br
       - "traefik.http.routers.liveEntryPoint.rule=Host(`live.cacic.com.br`)"
+      - "traefik.http.routers.liveEntryPoint.entrypoints=web,websecure"
+      - "traefik.http.routers.liveEntryPoint.tls=true"
       - "traefik.http.routers.liveEntryPoint.middlewares=redirectLive"
-      - "traefik.http.middlewares.redirectLive.redirectregex.regex=.*"
+      - "traefik.http.routers.liveEntryPoint.service=noop@internal"
+
+      - "traefik.http.middlewares.redirectLive.redirectregex.regex=^https?://live\\.cacic\\.com\\.br(/.*)?$"
       - "traefik.http.middlewares.redirectLive.redirectregex.replacement=https://cacic.com.br/live"
       - "traefik.http.middlewares.redirectLive.redirectregex.permanent=true"
-      - "traefik.http.routers.liveEntryPoint.entrypoints=web, websecure"
 
       # Redirect cacic.dev.br para cacic.com.br
-      - traefik.http.routers.devbr-redirect.rule=HostRegexp(`^(.+\.)?cacic\.dev\.br$`)
-      - traefik.http.routers.devbr-redirect.entrypoints=websecure
-      - traefik.http.routers.devbr-redirect.tls=true
-      - traefik.http.routers.devbr-redirect.priority=1000
-      - traefik.http.routers.devbr-redirect.middlewares=devbr-to-combr
+      - "traefik.http.routers.devbr-redirect.rule=HostRegexp(`^(.+\.)?cacic\.dev\.br$`)"
+      - "traefik.http.routers.devbr-redirect.entrypoints=websecure "
+      - "traefik.http.routers.devbr-redirect.tls=true"
+      - "traefik.http.routers.devbr-redirect.priority=1000"
+      - "traefik.http.routers.devbr-redirect.middlewares=devbr-to-combr"
+      - "traefik.http.middlewares.devbr-to-combr.redirectregex.regex=^https://((?:.+)\.)?cacic\.dev\.br(/.*)?$$"
+      - "traefik.http.middlewares.devbr-to-combr.redirectregex.replacement=https://$${1}cacic.com.br$${2}"
+      - "traefik.http.middlewares.devbr-to-combr.redirectregex.permanent=true"
 
-      - traefik.http.middlewares.devbr-to-combr.redirectregex.regex=^https://((?:.+)\.)?cacic\.dev\.br(/.*)?$$
-      - traefik.http.middlewares.devbr-to-combr.redirectregex.replacement=https://$${1}cacic.com.br$${2}
-      - traefik.http.middlewares.devbr-to-combr.redirectregex.permanent=true
-
-      - traefik.http.routers.events-docs-redirect.rule=Host(`docs.fctapp.cacic.dev.br`)
-      - traefik.http.routers.events-docs-redirect.entrypoints=websecure
-      - traefik.http.routers.events-docs-redirect.tls=true
-      - traefik.http.routers.events-docs-redirect.tls.certresolver=letsencrypt
-      - traefik.http.routers.events-docs-redirect.priority=2000
-      - traefik.http.routers.events-docs-redirect.middlewares=events-docs-redirect
-
-      - traefik.http.middlewares.events-docs-redirect.redirectregex.regex=^https://docs\.fctapp\.cacic\.dev\.br(/.*)?$$
-      - traefik.http.middlewares.events-docs-redirect.redirectregex.replacement=https://docs.eventos.cacic.com.br$${1}
-      - traefik.http.middlewares.events-docs-redirect.redirectregex.permanent=true
+      # Redirect docs.fctapp.cacic.dev.br para docs.eventos.cacic.com.br
+      - "traefik.http.routers.events-docs-redirect.rule=Host(`docs.fctapp.cacic.dev.br`)"
+      - "traefik.http.routers.events-docs-redirect.entrypoints=websecure"
+      - "traefik.http.routers.events-docs-redirect.tls=true"
+      - "traefik.http.routers.events-docs-redirect.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.events-docs-redirect.priority=2000"
+      - "traefik.http.routers.events-docs-redirect.middlewares=events-docs-redirect"
+      - "traefik.http.middlewares.events-docs-redirect.redirectregex.regex=^https://docs\.fctapp\.cacic\.dev\.br(/.*)?$$"
+      - "traefik.http.middlewares.events-docs-redirect.redirectregex.replacement=https://docs.eventos.cacic.com.br$${1}"
+      - "traefik.http.middlewares.events-docs-redirect.redirectregex.permanent=true"
 
 networks:
   traefik:
