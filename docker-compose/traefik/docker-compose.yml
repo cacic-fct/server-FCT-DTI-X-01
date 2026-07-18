@@ -135,7 +135,7 @@ services:
       - "traefik.http.middlewares.redirectLive.redirectregex.permanent=true"
 
       # Redirect cacic.dev.br para cacic.com.br
-      - traefik.http.routers.devbr-redirect.rule=HostRegexp(`^(.+\.)?cacic\.dev\.br$`)
+      - 'traefik.http.routers.devbr-redirect.rule=HostRegexp(`^(.+\.)?cacic\.dev\.br$`)'
       - "traefik.http.routers.devbr-redirect.entrypoints=websecure "
       - "traefik.http.routers.devbr-redirect.tls=true"
       - "traefik.http.routers.devbr-redirect.priority=1000"
