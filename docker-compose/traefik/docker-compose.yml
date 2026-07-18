@@ -151,7 +151,7 @@ services:
       - "traefik.http.routers.events-docs-redirect.tls.certresolver=letsencrypt"
       - "traefik.http.routers.events-docs-redirect.priority=2000"
       - "traefik.http.routers.events-docs-redirect.middlewares=events-docs-redirect"
-      - "traefik.http.middlewares.events-docs-redirect.redirectregex.regex=^https://docs\.fctapp\.cacic\.dev\.br(/.*)?$$"
+      - 'traefik.http.middlewares.events-docs-redirect.redirectregex.regex=^https://docs\.fctapp\.cacic\.dev\.br(/.*)?$$''
       - "traefik.http.middlewares.events-docs-redirect.redirectregex.replacement=https://docs.eventos.cacic.com.br$${1}"
       - "traefik.http.middlewares.events-docs-redirect.redirectregex.permanent=true"
 
