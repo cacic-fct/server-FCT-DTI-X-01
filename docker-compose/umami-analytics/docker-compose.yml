@@ -24,7 +24,7 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
       - "traefik.http.routers.umami.entryPoints=web, websecure"
-      - "traefik.http.routers.umami.rule= Host(`analytics.cacic.com.br`) || (Host(`a.cacic.com.br`) && (PathPrefix(`/b.js`) || PathPrefix(`/recorder.js`)))"
+      - "traefik.http.routers.umami.rule= Host(`analytics.cacic.com.br`) || (Host(`a.cacic.com.br`) && (PathPrefix(`/a`) || PathPrefix(`/b.js`) || PathPrefix(`/recorder.js`)))"
       - "traefik.http.routers.umami.tls=true"
       - "traefik.http.routers.umami.tls.certResolver=letsencrypt"
       - "traefik.http.routers.umami.service=umami-svc"
