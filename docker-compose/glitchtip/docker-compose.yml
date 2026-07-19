@@ -1,7 +1,8 @@
 x-environment: &default-environment
   PORT: 8000
-  GLITCHTIP_DOMAIN: https://glitchtip.cacic.com.br # Change this to your domain
-  DEFAULT_FROM_EMAIL: glitchtip@cacic.com.br # Change this to your email
+  GLITCHTIP_DOMAIN: https://glitchtip.cacic.com.br
+  EMAIL_URL: "smtp://cacic:cacic@mailcatcher:1025"
+  DEFAULT_FROM_EMAIL: glitchtip@cacic.com.br
   CELERY_WORKER_AUTOSCALE: "1,3" # Scale between 1 and 3 to prevent excessive memory usage. Change it or remove to set it to the number of cpu cores.
   CELERY_WORKER_MAX_TASKS_PER_CHILD: "10000"
   ENABLE_USER_REGISTRATION: false
