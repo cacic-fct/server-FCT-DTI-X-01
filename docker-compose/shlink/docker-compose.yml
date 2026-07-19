@@ -20,7 +20,6 @@ services:
       - "traefik.http.routers.shlink-backend.entryPoints=websecure, web"
       - 'traefik.http.routers.shlink-backend.rule=Host(`s.cacic.com.br`) && (PathPrefix(`/s/`) || PathRegexp(`^\/s$`))'
       - "traefik.http.routers.shlink-backend.tls=true"
-      - "traefik.http.routers.shlink-backend.tls.certResolver=letsencrypt"
       - "traefik.http.routers.shlink-backend.service=shlink-backend-svc"
       - "traefik.http.services.shlink-backend-svc.loadbalancer.server.port=8081"
     depends_on:
@@ -53,7 +52,6 @@ services:
       - "traefik.http.routers.shlink-frontend.entryPoints=websecure, web"
       - "traefik.http.routers.shlink-frontend.rule=Host(`s.cacic.com.br`)"
       - "traefik.http.routers.shlink-frontend.tls=true"
-      - "traefik.http.routers.shlink-frontend.tls.certResolver=letsencrypt"
       - "traefik.http.routers.shlink-frontend.service=shlink-frontend-svc"
       - "traefik.http.services.shlink-frontend-svc.loadbalancer.server.port=8080"
       - "traefik.http.routers.shlink-frontend.middlewares=authentik@docker"

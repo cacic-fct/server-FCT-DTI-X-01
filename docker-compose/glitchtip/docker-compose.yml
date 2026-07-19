@@ -45,7 +45,6 @@ services:
       - "traefik.http.routers.glitchtip.entryPoints=websecure, web"
       - "traefik.http.routers.glitchtip.rule=Host(`glitchtip.cacic.com.br`)"
       - "traefik.http.routers.glitchtip.tls=true"
-      - "traefik.http.routers.glitchtip.tls.certResolver=letsencrypt"
       - "traefik.http.routers.glitchtip.service=glitchtip-svc"
       - "traefik.http.services.glitchtip-svc.loadBalancer.server.port=8000"
   worker:

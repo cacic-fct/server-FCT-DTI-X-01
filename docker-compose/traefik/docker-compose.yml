@@ -41,6 +41,10 @@ services:
       - "--entrypoints.websecure.http.tls.certresolver=letsencrypt"
       - "--entrypoints.websecure.http.tls.domains[0].main=cacic.com.br"
       - "--entrypoints.websecure.http.tls.domains[0].sans=*.cacic.com.br"
+      - "--entrypoints.websecure.http.tls.domains[1].main=cacic.dev.br"
+      - "--entrypoints.websecure.http.tls.domains[1].sans=*.cacic.dev.br"
+      - "--entrypoints.websecure.http.tls.domains[2].main=fctapp.cacic.dev.br"
+      - "--entrypoints.websecure.http.tls.domains[2].sans=*.fctapp.cacic.dev.br"
       - "--entrypoints.websecure.http3=true"
       - "--entrypoints.websecure.http.middlewares=errorpages-unavailable@docker,compress@file,ratelimit@file,security-headers@file,crowdsec@file"
       # https://github.com/traefik/traefik/wiki/respondingTimeouts-for-applications
@@ -116,7 +120,6 @@ services:
       - "traefik.http.routers.dashboard.rule=Host(`traefik.cacic.com.br`)"
       - "traefik.http.routers.dashboard.service=api@internal"
       - "traefik.http.routers.dashboard.tls=true"
-      - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
       - "traefik.http.routers.dashboard.middlewares=dashboard-redirect,authentik@docker"
 
       # Redireciona a raiz do host para /dashboard/.
@@ -147,7 +150,6 @@ services:
       - "traefik.http.routers.unesp-entry-cacic.service=noop@internal"
       - "traefik.http.routers.unesp-entry-cacic.middlewares=unesp-entry-dos,unesp-entry-dos-req,redirect-to-docs"
       - "traefik.http.routers.unesp-entry-cacic.tls=true"
-      - "traefik.http.routers.unesp-entry-cacic.tls.certresolver=letsencrypt"
 
       - "traefik.http.middlewares.redirect-to-docs.redirectregex.regex=^https?://(?:38a\\.fct\\.unesp\\.br|fct-dti-x-01\\.cacic\\.com\\.br)(?:/.*)?$$"
       - "traefik.http.middlewares.redirect-to-docs.redirectregex.replacement=https://cacic.com.br/docs/Recursos/Servidores/FCT-DTI-X-01"
@@ -164,7 +166,6 @@ services:
       - "traefik.http.routers.live-entry.service=noop@internal"
       - "traefik.http.routers.live-entry.middlewares=redirect-live"
       - "traefik.http.routers.live-entry.tls=true"
-      - "traefik.http.routers.live-entry.tls.certresolver=letsencrypt"
 
       - 'traefik.http.middlewares.redirect-live.redirectregex.regex=^https?://live\.cacic\.com\.br(?:/.*)?$$'
       - "traefik.http.middlewares.redirect-live.redirectregex.replacement=https://cacic.com.br/live"
@@ -176,9 +177,6 @@ services:
       - "traefik.http.routers.devbr-redirect.entrypoints=websecure"
       - "traefik.http.routers.devbr-redirect.service=noop@internal"
       - "traefik.http.routers.devbr-redirect.tls=true"
-      - "traefik.http.routers.devbr-redirect.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.devbr-redirect.tls.domains[0].main=cacic.dev.br"
-      - "traefik.http.routers.devbr-redirect.tls.domains[0].sans=*.cacic.dev.br"
       - "traefik.http.routers.devbr-redirect.priority=1000"
       - "traefik.http.routers.devbr-redirect.middlewares=devbr-to-combr"
 
@@ -191,7 +189,6 @@ services:
       - "traefik.http.routers.events-docs-redirect.entrypoints=websecure"
       - "traefik.http.routers.events-docs-redirect.service=noop@internal"
       - "traefik.http.routers.events-docs-redirect.tls=true"
-      - "traefik.http.routers.events-docs-redirect.tls.certresolver=letsencrypt"
       - "traefik.http.routers.events-docs-redirect.priority=2000"
       - "traefik.http.routers.events-docs-redirect.middlewares=events-docs-to-new-host"
 

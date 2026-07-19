@@ -13,7 +13,6 @@ services:
       - "traefik.http.routers.fake-smtp.entryPoints=websecure, web"
       - "traefik.http.routers.fake-smtp.rule=Host(`smtp.cacic.com.br`)"
       - "traefik.http.routers.fake-smtp.tls=true"
-      - "traefik.http.routers.fake-smtp.tls.certResolver=letsencrypt"
       - "traefik.http.routers.fake-smtp.middlewares=authentik@docker"
       - "traefik.http.routers.fake-smtp.service=fake-smtp-svc"
       - "traefik.http.services.fake-smtp-svc.loadBalancer.server.port=1080"

@@ -33,7 +33,6 @@ services:
       - "traefik.http.routers.wud-updater.entryPoints=websecure, web"
       - "traefik.http.routers.wud-updater.rule=Host(`wud.cacic.com.br`)"
       - "traefik.http.routers.wud-updater.tls=true"
-      - "traefik.http.routers.wud-updater.tls.certResolver=letsencrypt"
       - "traefik.http.routers.wud-updater.service=wud-updater-svc"
       - "traefik.http.services.wud-updater-svc.loadBalancer.server.port=3000"
       - 'wud.tag.include=^\d+\.\d+\.\d+$$'

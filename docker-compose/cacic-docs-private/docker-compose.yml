@@ -12,7 +12,6 @@ services:
       - "traefik.http.routers.docs-private.entryPoints=web, websecure"
       - "traefik.http.routers.docs-private.rule=Host(`docs.cacic.com.br`)"
       - "traefik.http.routers.docs-private.tls=true"
-      - "traefik.http.routers.docs-private.tls.certResolver=letsencrypt"
       # HTTP Service
       - "traefik.http.services.docs-private-svc.loadBalancer.server.port=3000"
       - "traefik.http.services.docs-private-svc.loadBalancer.passHostHeader=true"
@@ -41,7 +40,6 @@ services:
       - "traefik.http.routers.docs-private-watchtower.entryPoints=websecure"
       - "traefik.http.routers.docs-private-watchtower.rule=Host(`watchtower.cacic.com.br`) && PathPrefix(`/cacic-docs-private`)"
       - "traefik.http.routers.docs-private-watchtower.tls=true"
-      - "traefik.http.routers.docs-private-watchtower.tls.certResolver=letsencrypt"
       - "traefik.http.routers.docs-private-watchtower.service=docs-private-watchtower-svc"
       - "traefik.http.services.docs-private-watchtower-svc.loadBalancer.server.port=8080"
       - "traefik.http.routers.docs-private-watchtower.middlewares=docs-private-stripprefix, noindex@file"

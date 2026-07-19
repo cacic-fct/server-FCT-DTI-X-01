@@ -17,7 +17,6 @@ services:
       - "traefik.http.routers.email-templates.entryPoints=web, websecure"
       - "traefik.http.routers.email-templates.rule=Host(`emails.cacic.com.br`)"
       - "traefik.http.routers.email-templates.tls=true"
-      - "traefik.http.routers.email-templates.tls.certResolver=letsencrypt"
       # HTTP Service
       - "traefik.http.services.email-templates-svc.loadBalancer.server.port=4321"
       - "traefik.http.services.email-templates-svc.loadBalancer.passHostHeader=true"

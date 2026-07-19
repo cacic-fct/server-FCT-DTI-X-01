@@ -17,7 +17,6 @@ services:
       - "traefik.http.routers.kuma.entryPoints=websecure, web"
       - "traefik.http.routers.kuma.rule=Host(`status.cacic.com.br`)"
       - "traefik.http.routers.kuma.tls=true"
-      - "traefik.http.routers.kuma.tls.certResolver=letsencrypt"
       - "traefik.http.routers.kuma.service=kuma-svc"
       - "traefik.http.services.kuma-svc.loadBalancer.server.port=3001"
       - "traefik.http.routers.kuma.middlewares=authentik@docker"

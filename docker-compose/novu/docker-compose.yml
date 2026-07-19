@@ -118,7 +118,6 @@ services:
       - "traefik.http.routers.novu-api.entrypoints=web,websecure"
       - "traefik.http.routers.novu-api.rule=Host(`notifications.cacic.com.br`) && PathPrefix(`/api`)"
       - "traefik.http.routers.novu-api.tls=true"
-      - "traefik.http.routers.novu-api.tls.certresolver=letsencrypt"
       - "traefik.http.routers.novu-api.service=novu-api-svc"
       - "traefik.http.services.novu-api-svc.loadbalancer.server.port=3000"
 
@@ -228,7 +227,6 @@ services:
       - "traefik.http.routers.novu-ws.entrypoints=web,websecure"
       - "traefik.http.routers.novu-ws.rule=Host(`notifications.cacic.com.br`) && (PathPrefix(`/ws`) || PathPrefix(`/socket.io`))"
       - "traefik.http.routers.novu-ws.tls=true"
-      - "traefik.http.routers.novu-ws.tls.certresolver=letsencrypt"
       - "traefik.http.routers.novu-ws.service=novu-ws-svc"
       - "traefik.http.services.novu-ws-svc.loadbalancer.server.port=3002"
 
@@ -274,7 +272,6 @@ services:
       - "traefik.http.routers.novu-dashboard.entrypoints=web,websecure"
       - "traefik.http.routers.novu-dashboard.rule=Host(`notifications.cacic.com.br`)"
       - "traefik.http.routers.novu-dashboard.tls=true"
-      - "traefik.http.routers.novu-dashboard.tls.certresolver=letsencrypt"
       - "traefik.http.routers.novu-dashboard.service=novu-dashboard-svc"
       - "traefik.http.services.novu-dashboard-svc.loadbalancer.server.port=4000"
 
