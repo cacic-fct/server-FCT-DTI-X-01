@@ -43,10 +43,11 @@ services:
       - traefik.http.routers.unleash-dashboard.rule=Host(`unleash.cacic.com.br`)
       - traefik.http.routers.unleash-dashboard.tls=true
       - traefik.http.routers.unleash-dashboard.tls.certresolver=letsencrypt
-      - traefik.http.routers.unleash-dashboard.middlewares=unleash-dashboard-strip-prefix
+      - traefik.http.routers.unleash-dashboard.middlewares=unleash-dashboard-strip-prefix,noindex@file
       - traefik.http.routers.unleash-dashboard.service=unleash-dashboard-svc
       - traefik.http.middlewares.unleash-dashboard-strip-prefix.stripprefix.prefixes=/dashboard
       - traefik.http.services.unleash-dashboard-svc.loadbalancer.server.port=4242
+
     networks:
       - default
       - traefik

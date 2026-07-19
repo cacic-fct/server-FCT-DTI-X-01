@@ -18,6 +18,9 @@ services:
       - "traefik.http.routers.errorpages.middlewares=errorpages-strip-prefix"
       - "traefik.http.routers.errorpages.service=errorpages-svc"
       - "traefik.http.middlewares.errorpages-strip-prefix.stripPrefix.prefixes=/_error-mw"
+
+      # Middleware Opt-in
+      # Não use ele globalmente, para que os serviços possam retornar as próprias respostas 4xx/5xx.
       - "traefik.http.middlewares.errorpages-mw.errors.status=400-401,403-414,421,429,500-504,511"
       - "traefik.http.middlewares.errorpages-mw.errors.service=errorpages-svc"
       - "traefik.http.middlewares.errorpages-mw.errors.query=/{status}.html"
