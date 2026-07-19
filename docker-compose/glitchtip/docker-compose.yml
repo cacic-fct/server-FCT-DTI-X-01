@@ -9,7 +9,7 @@ x-environment: &default-environment
   ENABLE_SOCIAL_APPS_USER_REGISTRATION: true
   ENABLE_ORGANIZATION_CREATION: false
   PROXY_ENV: true
-  ALLOWED_HOSTS: [".cacic.com.br"]
+  ALLOWED_HOSTS: ".cacic.com.br"
 
 x-depends_on: &default-depends_on
   - postgres
