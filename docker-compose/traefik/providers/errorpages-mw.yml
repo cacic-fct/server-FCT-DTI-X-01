@@ -10,4 +10,5 @@ http:
           - "500-504"
           - "511"
         service: errorpages-svc@docker
+        # The error service is called directly, so only browser-loaded assets use /_error-mw/.
         query: "/{status}.html"

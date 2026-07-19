@@ -1,17 +1,23 @@
 services:
   errorpages:
-    image: nginx:latest
+    image: ghcr.io/cacic-fct/error-pages:${ERROR_PAGES_IMAGE_TAG:-main}
+    pull_policy: always
     restart: unless-stopped
-    volumes:
-      - /home/shared/docker-data/cacic-error-pages/html:/usr/share/nginx/html
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:8080/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     networks:
       - traefik
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.errorpages.rule=HostRegexp(`{host:.+}`)"
-      - "traefik.http.routers.errorpages.priority=1"
+      - "traefik.http.routers.errorpages.rule=PathPrefix(`/_error-mw/`)"
+      - "traefik.http.routers.errorpages.priority=100"
+      - "traefik.http.routers.errorpages.middlewares=errorpages-strip-prefix"
       - "traefik.http.routers.errorpages.service=errorpages-svc"
-      - "traefik.http.services.errorpages-svc.loadBalancer.server.port=80"
+      - "traefik.http.services.errorpages-svc.loadBalancer.server.port=8080"
+      - "traefik.http.middlewares.errorpages-strip-prefix.stripPrefix.prefixes=/_error-mw"
 networks:
   traefik:
     external: true
