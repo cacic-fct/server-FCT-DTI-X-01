@@ -2,7 +2,6 @@
 compose_data_directories:
   - authentik
   - beszel
-  - cacic-error-pages/html
   - cacic-account/postgres_data
   - cacic-account/redis_data
   - cacic-event-manager/db

@@ -30,7 +30,6 @@ compose_pull_before_up: true
 compose_remove_orphans: true
 
 compose_public_paths_moved_to_secrets:
-  - cacic-error-pages/html
   - traefik/providers/crowdsec.yml
 
 compose_required_secret_overlay_files:

@@ -24,7 +24,7 @@ services:
       - "traefik.http.routers.infisical.tls.certResolver=letsencrypt"
       - "traefik.http.services.infisical-svc.loadbalancer.server.port=8080"
       - "traefik.http.routers.infisical.service=infisical-svc"
-      - "traefik.http.routers.infisical.middlewares=errorpages-mw@file, ipwhitelist-mw@file"
+      - "traefik.http.routers.infisical.middlewares=errorpages-mw@docker, ipwhitelist-mw@file"
 
   redis:
     image: redis

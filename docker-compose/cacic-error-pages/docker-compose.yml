@@ -17,8 +17,15 @@ services:
       - "traefik.http.routers.errorpages.priority=100"
       - "traefik.http.routers.errorpages.middlewares=errorpages-strip-prefix"
       - "traefik.http.routers.errorpages.service=errorpages-svc"
-      - "traefik.http.services.errorpages-svc.loadBalancer.server.port=8080"
       - "traefik.http.middlewares.errorpages-strip-prefix.stripPrefix.prefixes=/_error-mw"
+      - "traefik.http.middlewares.errorpages-mw.errors.status=400-401,403-414,421,429,500-504,511"
+      - "traefik.http.middlewares.errorpages-mw.errors.service=errorpages-svc"
+      - "traefik.http.middlewares.errorpages-mw.errors.query=/{status}.html"
+      - "traefik.http.services.errorpages-svc.loadbalancer.server.port=8080"
+      - "traefik.http.services.errorpages-svc.loadbalancer.passhostheader=false"
+      - "traefik.http.services.errorpages-svc.loadbalancer.healthcheck.path=/healthz"
+      - "traefik.http.services.errorpages-svc.loadbalancer.healthcheck.interval=10s"
+      - "traefik.http.services.errorpages-svc.loadbalancer.healthcheck.timeout=3s"
 networks:
   traefik:
     external: true
