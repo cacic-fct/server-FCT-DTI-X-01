@@ -42,7 +42,7 @@ services:
       - "--entrypoints.websecure.http.tls.domains[0].main=cacic.com.br"
       - "--entrypoints.websecure.http.tls.domains[0].sans=*.cacic.com.br"
       - "--entrypoints.websecure.http3=true"
-      - "--entrypoints.websecure.http.middlewares=compress@file,ratelimit@file,security-headers@file,crowdsec@file"
+      - "--entrypoints.websecure.http.middlewares=errorpages-unavailable@docker,compress@file,ratelimit@file,security-headers@file,crowdsec@file"
       # https://github.com/traefik/traefik/wiki/respondingTimeouts-for-applications
       - "--entrypoints.websecure.transport.respondingtimeouts.readtimeout=0s"
 

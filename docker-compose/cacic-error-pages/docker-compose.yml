@@ -21,6 +21,25 @@ services:
       - "traefik.http.middlewares.errorpages-mw.errors.status=400-401,403-414,421,429,500-504,511"
       - "traefik.http.middlewares.errorpages-mw.errors.service=errorpages-svc"
       - "traefik.http.middlewares.errorpages-mw.errors.query=/{status}.html"
+      - "traefik.http.middlewares.errorpages-mw.errors.errorrequestheaders=Accept,Accept-Language"
+
+      # Fallback global para falhas de infraestrutura apenas.
+      - "traefik.http.middlewares.errorpages-unavailable.errors.status=502-504"
+      - "traefik.http.middlewares.errorpages-unavailable.errors.service=errorpages-svc"
+      - "traefik.http.middlewares.errorpages-unavailable.errors.query=/{status}.html"
+      - "traefik.http.middlewares.errorpages-unavailable.errors.errorrequestheaders=Accept,Accept-Language"
+
+      # Rota para capturar requisições HTTPS que não correspondem a nenhum serviço.
+      - "traefik.http.routers.errorpages-catchall.entrypoints=websecure"
+      - "traefik.http.routers.errorpages-catchall.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.errorpages-catchall.priority=1"
+      - "traefik.http.routers.errorpages-catchall.middlewares=errorpages-not-found"
+      - "traefik.http.routers.errorpages-catchall.service=errorpages-svc"
+      - "traefik.http.middlewares.errorpages-not-found.errors.status=404"
+      - "traefik.http.middlewares.errorpages-not-found.errors.service=errorpages-svc"
+      - "traefik.http.middlewares.errorpages-not-found.errors.query=/{status}.html"
+      - "traefik.http.middlewares.errorpages-not-found.errors.errorrequestheaders=Accept,Accept-Language"
+
       - "traefik.http.services.errorpages-svc.loadbalancer.server.port=8080"
       - "traefik.http.services.errorpages-svc.loadbalancer.passhostheader=false"
       - "traefik.http.services.errorpages-svc.loadbalancer.healthcheck.path=/healthz"
