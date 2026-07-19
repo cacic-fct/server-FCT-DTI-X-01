@@ -97,6 +97,7 @@ services:
       - "./letsencrypt:/letsencrypt"
       - "./providers:/providers:ro"
       - "/home/shared/docker-data/crowdsec/traefikLogs:/var/log/traefik"
+      - "/home/shared/docker-data/cacic-error-pages/html/ban.html:/error-pages/ban.html:ro"
 
     logging:
       driver: "json-file"
