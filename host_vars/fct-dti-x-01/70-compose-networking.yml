@@ -3,3 +3,9 @@ compose_networks:
   - traefik
   - prometheus
   - smtp
+  - name: cacic-m2m-event-account
+    internal: true
+  - name: cacic-m2m-event-voto
+    internal: true
+  - name: cacic-m2m-account-voto
+    internal: true

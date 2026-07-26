@@ -72,6 +72,7 @@ services:
       DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:postgres@cacic-db:5432/postgres?schema=public}
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      EVENT_MANAGER_GRPC_URL: ${EVENT_MANAGER_GRPC_URL:-events-backend:50051}
     command:
       - sh
       - -c
@@ -90,6 +91,7 @@ services:
       - postgres_network
       - redis_network
       - traefik
+      - cacic-m2m-event-account
     labels:
       - "wud.watch=true"
       - "wud.watch.digest=true"
@@ -147,6 +149,8 @@ services:
       - "traefik.http.middlewares.acc-frontend-redirect-app.redirectregex.permanent=true"
 
 networks:
+  cacic-m2m-event-account:
+    external: true
   postgres_network:
     driver: bridge
   redis_network:

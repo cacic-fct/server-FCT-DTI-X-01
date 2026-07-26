@@ -1,12 +1,30 @@
 ---
 - name: Inspect external Docker networks
-  ansible.builtin.command: "docker network inspect {{ item }}"
+  ansible.builtin.command:
+    argv:
+      - docker
+      - network
+      - inspect
+      - "{{ item.name | default(item) }}"
   register: docker_network_inspect
   changed_when: false
   failed_when: false
   loop: "{{ compose_networks }}"
 
 - name: Create missing external Docker networks
-  ansible.builtin.command: "docker network create {{ item.item }}"
+  ansible.builtin.command:
+    argv: "{{ ['docker', 'network', 'create'] + (['--internal'] if (item.item.internal | default(false) | bool) else []) + [item.item.name | default(item.item)] }}"
   loop: "{{ docker_network_inspect.results }}"
   when: item.rc != 0
+
+- name: Verify scoped M2M networks are internal
+  ansible.builtin.assert:
+    that:
+      - ((item.stdout | from_json | first).Internal | bool)
+    fail_msg: >-
+      Docker network {{ item.item.name }} already exists without the internal
+      isolation flag. Recreate it as an internal network before deployment.
+  loop: "{{ docker_network_inspect.results }}"
+  when:
+    - item.rc == 0
+    - item.item.internal | default(false) | bool
