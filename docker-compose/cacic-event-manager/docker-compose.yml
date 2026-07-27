@@ -175,7 +175,7 @@ services:
       NODE_ENV: production
       PORT: 4000
       TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:-}
-      SITEMAP_API_URL: http://events-backend:3000/api/graphql
+      SITEMAP_API_URL: ${SITEMAP_API_URL:-http://events-backend:3000/api/graphql}
     depends_on:
       events-backend:
         condition: service_started
