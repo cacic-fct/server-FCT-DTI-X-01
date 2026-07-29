@@ -15,5 +15,6 @@
     daemon_reload: true
 
 - name: Restore iptables
-  ansible.builtin.command: iptables-restore /etc/iptables/rules.v4
+  ansible.builtin.command:
+    cmd: iptables-restore --noflush /etc/iptables/rules.v4
   changed_when: true

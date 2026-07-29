@@ -3,6 +3,9 @@
 :FORWARD ACCEPT [0:0]
 :OUTPUT ACCEPT [0:0]
 
+# This host owns only INPUT.  Do not flush the complete filter table: Docker
+# keeps its forwarding chains (DOCKER, DOCKER-FORWARD, etc.) in that table.
+-F INPUT
 -A INPUT -i lo -j ACCEPT
 -A INPUT -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
 {% for cidr in firewall_allowed_ssh_ipv4 %}
