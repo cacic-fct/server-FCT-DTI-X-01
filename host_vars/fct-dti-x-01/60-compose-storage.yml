@@ -4,6 +4,8 @@ compose_data_directories:
   - beszel
   - cacic-account/postgres_data
   - cacic-account/redis_data
+  - cacic-voto/db
+  - cacic-voto/redis
   - cacic-event-manager/db
   - cacic-event-manager/redis
   - novu/mongodb

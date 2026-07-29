@@ -1,0 +1,118 @@
+name: cacic-voto
+
+services:
+  voto-db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-cacic_voto}
+      POSTGRES_USER: ${POSTGRES_USER:-cacic_voto}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    volumes:
+      - /home/shared/docker-data/cacic-voto/db:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  voto-redis:
+    image: redis:8-alpine
+    command: redis-server --appendonly yes
+    volumes:
+      - /home/shared/docker-data/cacic-voto/redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  cacic-voto-backend:
+    image: ghcr.io/cacic-fct/voto/backend:${IMAGE_TAG:-latest}
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+      REDIS_URL: ${REDIS_URL:-redis://voto-redis:6379/0}
+      EVENT_MANAGER_GRPC_URL: ${EVENT_MANAGER_GRPC_URL:-events-backend:50051}
+      ACCOUNT_MANAGER_GRPC_URL: ${ACCOUNT_MANAGER_GRPC_URL:-cacic-account-manager-backend:50051}
+    command:
+      - sh
+      - -c
+      - |
+        cd /app/apps/backend
+        ../../node_modules/.bin/prisma migrate deploy --config prisma.config.ts
+        cd /app
+        exec node main.js
+    depends_on:
+      voto-db:
+        condition: service_healthy
+      voto-redis:
+        condition: service_healthy
+    restart: unless-stopped
+    labels:
+      - "wud.watch=true"
+      - "wud.watch.digest=true"
+      - "wud.tag.include=^latest$$"
+      - "wud.trigger.include=docker.cacicvoto"
+      - "wud.display.name=cacic-voto-backend"
+      - "wud.link.template=https://github.com/cacic-fct/voto/pkgs/container/voto%2Fbackend"
+      - "traefik.enable=true"
+      - "traefik.scope=public"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.cacic-voto-api.entrypoints=web,websecure"
+      - "traefik.http.routers.cacic-voto-api.rule=Host(`voto.cacic.com.br`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.cacic-voto-api.tls=true"
+      - "traefik.http.routers.cacic-voto-api.service=cacic-voto-api-svc"
+      - "traefik.http.services.cacic-voto-api-svc.loadbalancer.server.port=3000"
+    networks:
+      - default
+      - traefik
+      - cacic-m2m-event-voto
+      - cacic-m2m-account-voto
+
+  cacic-voto-frontend:
+    image: ghcr.io/cacic-fct/voto/frontend:${IMAGE_TAG:-latest}
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+    depends_on:
+      cacic-voto-backend:
+        condition: service_started
+    restart: unless-stopped
+    labels:
+      - "wud.watch=true"
+      - "wud.watch.digest=true"
+      - "wud.tag.include=^latest$$"
+      - "wud.trigger.include=docker.cacicvoto"
+      - "wud.display.name=cacic-voto-frontend"
+      - "wud.link.template=https://github.com/cacic-fct/voto/pkgs/container/voto%2Ffrontend"
+      - "traefik.enable=true"
+      - "traefik.scope=public"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.cacic-voto-frontend.entrypoints=web,websecure"
+      - "traefik.http.routers.cacic-voto-frontend.rule=Host(`voto.cacic.com.br`)"
+      - "traefik.http.routers.cacic-voto-frontend.tls=true"
+      - "traefik.http.routers.cacic-voto-frontend.service=cacic-voto-frontend-svc"
+      - "traefik.http.services.cacic-voto-frontend-svc.loadbalancer.server.port=4000"
+      - "traefik.http.routers.cacic-vote-redirect.entrypoints=web,websecure"
+      - "traefik.http.routers.cacic-vote-redirect.rule=Host(`vote.cacic.com.br`)"
+      - "traefik.http.routers.cacic-vote-redirect.tls=true"
+      - "traefik.http.routers.cacic-vote-redirect.middlewares=cacic-vote-to-voto"
+      - "traefik.http.routers.cacic-vote-redirect.service=cacic-voto-frontend-svc"
+      - 'traefik.http.middlewares.cacic-vote-to-voto.redirectregex.regex=^https?://vote\.cacic\.com\.br/(.*)$$'
+      - "traefik.http.middlewares.cacic-vote-to-voto.redirectregex.replacement=https://voto.cacic.com.br/$${1}"
+      - "traefik.http.middlewares.cacic-vote-to-voto.redirectregex.permanent=true"
+    networks:
+      - traefik
+
+networks:
+  traefik:
+    external: true
+  cacic-m2m-event-voto:
+    external: true
+  cacic-m2m-account-voto:
+    external: true

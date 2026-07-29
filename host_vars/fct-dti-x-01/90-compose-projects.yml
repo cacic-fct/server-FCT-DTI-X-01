@@ -14,6 +14,7 @@ compose_projects:
   - seaweedfs
   - novu
   - cacic-account-manager
+  - cacic-voto
   - cacic-email-templates
   - cacic-event-manager
   - glitchtip
@@ -34,6 +35,7 @@ compose_public_paths_moved_to_secrets:
 
 compose_required_secret_overlay_files:
   - cacic-account-manager/.env
+  - cacic-voto/.env
   - cacic-event-manager/.env
   - novu/.env
   - keycloak/.env

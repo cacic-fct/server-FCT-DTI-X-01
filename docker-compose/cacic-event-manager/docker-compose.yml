@@ -131,6 +131,7 @@ services:
       - default
       - traefik
       - cacic-m2m-event-account
+      - cacic-m2m-event-voto
 
   admin:
     image: ghcr.io/cacic-fct/event-manager/admin:${IMAGE_TAG:-latest}
@@ -243,6 +244,8 @@ services:
 
 networks:
   cacic-m2m-event-account:
+    external: true
+  cacic-m2m-event-voto:
     external: true
   traefik:
     external: true

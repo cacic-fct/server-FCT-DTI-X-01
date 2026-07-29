@@ -92,6 +92,7 @@ services:
       - redis_network
       - traefik
       - cacic-m2m-event-account
+      - cacic-m2m-account-voto
     labels:
       - "wud.watch=true"
       - "wud.watch.digest=true"
@@ -150,6 +151,8 @@ services:
 
 networks:
   cacic-m2m-event-account:
+    external: true
+  cacic-m2m-account-voto:
     external: true
   postgres_network:
     driver: bridge
