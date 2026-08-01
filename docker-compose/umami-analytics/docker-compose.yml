@@ -27,6 +27,7 @@ services:
       - "traefik.http.routers.umami.rule= Host(`analytics.cacic.com.br`) || (Host(`a.cacic.com.br`) && (PathPrefix(`/a`) || PathPrefix(`/b.js`) || PathPrefix(`/recorder.js`)))"
       - "traefik.http.routers.umami.tls=true"
       - "traefik.http.routers.umami.service=umami-svc"
+      - "traefik.http.routers.umami.middlewares=noindex@file"
       - "traefik.http.services.umami-svc.loadbalancer.server.port=3000"
     networks:
       - default
