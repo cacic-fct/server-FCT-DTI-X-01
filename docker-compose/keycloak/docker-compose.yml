@@ -41,6 +41,7 @@ services:
       - "traefik.http.routers.keycloak.rule=Host(`sso.cacic.com.br`) || Host(`sso-admin.cacic.com.br`)"
       - "traefik.http.routers.keycloak.tls=true"
       - "traefik.http.routers.keycloak.service=keycloak-svc"
+      - "traefik.http.routers.keycloak.middlewares=noindex@file"
       - "traefik.http.services.keycloak-svc.loadbalancer.server.port=8080"
     networks:
       - default

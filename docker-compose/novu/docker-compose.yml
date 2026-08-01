@@ -273,6 +273,7 @@ services:
       - "traefik.http.routers.novu-dashboard.rule=Host(`notifications.cacic.com.br`)"
       - "traefik.http.routers.novu-dashboard.tls=true"
       - "traefik.http.routers.novu-dashboard.service=novu-dashboard-svc"
+      - "traefik.http.routers.novu-dashboard.middlewares=noindex@file"
       - "traefik.http.services.novu-dashboard-svc.loadbalancer.server.port=4000"
 
 networks:

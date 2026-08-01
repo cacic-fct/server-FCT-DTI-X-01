@@ -18,6 +18,7 @@ services:
       - "traefik.http.routers.typesense.tls=true"
       - "traefik.http.services.typesense-svc.loadbalancer.server.port=8108"
       - "traefik.http.routers.typesense.service=typesense-svc"
+      - "traefik.http.routers.typesense.middlewares=noindex@file"
 
 networks:
   traefik:

@@ -52,6 +52,7 @@ services:
       - "traefik.http.routers.glitchtip.tls=true"
       - "traefik.http.routers.glitchtip.service=glitchtip-svc"
       - "traefik.http.services.glitchtip-svc.loadBalancer.server.port=8000"
+      - "traefik.http.routers.glitchtip.middlewares=noindex@file"
   worker:
     image: glitchtip/glitchtip
     command: ./bin/run-celery-with-beat.sh
