@@ -137,7 +137,7 @@ services:
       - "traefik.http.routers.seaweed-s3.entrypoints=web, websecure"
       - "traefik.http.routers.seaweed-s3.service=seaweed-s3"
       - "traefik.http.middlewares.s3-headers.headers.customResponseHeaders.Transfer-Encoding="
-      - "traefik.http.routers.seaweed-s3.middlewares=s3-headers,noindex@file""
+      - "traefik.http.routers.seaweed-s3.middlewares=s3-headers,noindex@file"
       - "traefik.http.services.seaweed-s3.loadbalancer.server.port=8333"
       - "traefik.http.routers.seaweed-s3.tls=true"
       - "traefik.http.services.seaweed-s3.loadbalancer.passhostheader=true"
