@@ -49,7 +49,7 @@ services:
       start_period: 20s
 
   api:
-    image: ghcr.io/novuhq/novu/api:3.18.0
+    image: ghcr.io/novuhq/novu/api:3.19.0
     container_name: novu-api
     restart: unless-stopped
     depends_on:
@@ -122,7 +122,7 @@ services:
       - "traefik.http.services.novu-api-svc.loadbalancer.server.port=3000"
 
   worker:
-    image: ghcr.io/novuhq/novu/worker:3.18.0
+    image: ghcr.io/novuhq/novu/worker:3.19.0
     container_name: novu-worker
     restart: unless-stopped
     depends_on:
@@ -231,7 +231,7 @@ services:
       - "traefik.http.services.novu-ws-svc.loadbalancer.server.port=3002"
 
   dashboard:
-    image: ghcr.io/novuhq/novu/dashboard:3.18.0
+    image: ghcr.io/novuhq/novu/dashboard:3.19.0
     container_name: novu-dashboard
     restart: unless-stopped
     depends_on:
