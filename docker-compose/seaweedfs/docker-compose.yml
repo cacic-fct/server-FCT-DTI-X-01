@@ -148,7 +148,7 @@ services:
       - default
 
   db:
-    image: postgres:17-alpine
+    image: postgis/postgis:18-3.6
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
