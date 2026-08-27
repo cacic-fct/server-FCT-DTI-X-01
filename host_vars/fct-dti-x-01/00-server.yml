@@ -9,26 +9,44 @@ docker_compose_group: admin
 
 server_require_non_root_ssh_authorized_key: true
 
-# Accounts provisioned by DTI outside Ansible. Ansible only verifies this
-# agreed state and must not create users or grant access here.
+# Accounts provisioned by DTI outside Ansible. Ansible verifies this agreed
+# state and restores shell if disabled;
+# It must not create users or grant group membership.
+server_human_account_login_shell: /bin/bash
+server_human_account_login_uids:
+  - 1002
+  - 1003
+  - 1004
+  - 1005
+  - 1006
 server_human_accounts:
   - name: fernando
+    uid: 1001
     required_groups:
       - sudo
       - docker
   - name: guibatalhoti
+    uid: 1002
     required_groups:
       - sudo
       - docker
   - name: willshobwish
+    uid: 1003
     required_groups:
       - sudo
       - docker
   - name: danielserezane
+    uid: 1004
     required_groups:
       - sudo
       - docker
   - name: renanyudi
+    uid: 1005
+    required_groups:
+      - sudo
+      - docker
+  - name: kampuz
+    uid: 1006
     required_groups:
       - sudo
       - docker
