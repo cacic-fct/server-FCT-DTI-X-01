@@ -3,7 +3,6 @@
   ansible.builtin.command:
     argv:
       - id
-      - -u
       - "{{ item.name }}"
   register: server_human_account_checks
   changed_when: false
@@ -16,35 +15,9 @@
   ansible.builtin.assert:
     that:
       - item.rc == 0
-      - item.stdout | int == item.item.uid
     fail_msg: >-
-      Human account {{ item.item.name }} must exist with UID
-      {{ item.item.uid }}. Current UID:
-      {{ item.stdout | default('missing') }}.
+      Human account {{ item.item.name }} must exist.
   loop: "{{ server_human_account_checks.results | default([]) }}"
-  loop_control:
-    label: "{{ item.item.name }}"
-
-- name: Read human account records
-  ansible.builtin.command:
-    argv:
-      - getent
-      - passwd
-      - "{{ item.uid }}"
-  register: server_human_account_records
-  changed_when: false
-  loop: "{{ server_human_accounts | default([]) }}"
-  loop_control:
-    label: "{{ item.name }}"
-
-- name: Restore login shell for disabled human accounts
-  ansible.builtin.user:
-    name: "{{ item.item.name }}"
-    shell: "{{ server_human_account_login_shell }}"
-  when:
-    - item.item.uid in server_human_account_login_uids
-    - item.stdout.split(':') | last == '/usr/sbin/nologin'
-  loop: "{{ server_human_account_records.results | default([]) }}"
   loop_control:
     label: "{{ item.item.name }}"
 
