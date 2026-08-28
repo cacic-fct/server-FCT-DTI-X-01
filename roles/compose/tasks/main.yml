@@ -1,7 +1,10 @@
 ---
-- name: Load GHCR authentication
-  ansible.builtin.import_tasks: ghcr-auth.yml
+- name: Load GitHub App secrets authentication setup
+  ansible.builtin.import_tasks: github-app-auth.yml
   when: server_secrets_auth_method | default('github_app') == 'github_app'
+
+- name: Load secret source checks
+  ansible.builtin.import_tasks: secrets-source.yml
 
 - name: Load compose filesystem setup
   ansible.builtin.import_tasks: filesystem.yml

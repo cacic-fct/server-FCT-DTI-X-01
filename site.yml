@@ -14,8 +14,5 @@
   roles:
     - role: base
     - role: docker
-    - role: secrets
-    - role: accounts
-    - role: access
     - role: ansible_pull
     - role: compose

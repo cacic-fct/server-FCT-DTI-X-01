@@ -8,37 +8,3 @@ docker_data_root: "{{ shared_root }}/docker-data"
 docker_compose_group: admin
 
 server_require_non_root_ssh_authorized_key: true
-server_human_account_shell: /bin/bash
-server_human_account_secrets_file: "{{ server_secrets_source_path }}/ansible/human-accounts.yml"
-server_human_account_authorized_keys_root: "{{ server_secrets_source_path }}/ansible/authorized-keys"
-server_human_accounts:
-  - name: fernando
-    uid: 1001
-    groups:
-      - sudo
-      - docker
-  - name: guibatalhoti
-    uid: 1002
-    groups:
-      - sudo
-      - docker
-  - name: willshobwish
-    uid: 1003
-    groups:
-      - sudo
-      - docker
-  - name: danielserezane
-    uid: 1004
-    groups:
-      - sudo
-      - docker
-  - name: renanyudi
-    uid: 1005
-    groups:
-      - sudo
-      - docker
-  - name: kampuz
-    uid: 1006
-    groups:
-      - sudo
-      - docker
