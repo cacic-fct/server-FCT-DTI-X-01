@@ -8,9 +8,6 @@
 - name: Load time synchronization
   ansible.builtin.import_tasks: time.yml
 
-- name: Load access hardening
-  ansible.builtin.import_tasks: access.yml
-
 - name: Load login messages
   ansible.builtin.import_tasks: login-messages.yml
 
