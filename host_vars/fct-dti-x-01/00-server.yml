@@ -8,27 +8,3 @@ docker_data_root: "{{ shared_root }}/docker-data"
 docker_compose_group: admin
 
 server_require_non_root_ssh_authorized_key: true
-
-# Accounts provisioned by DTI outside Ansible. Ansible only verifies this
-# agreed state and must not create users or grant access here.
-server_human_accounts:
-  - name: fernando
-    required_groups:
-      - sudo
-      - docker
-  - name: guibatalhoti
-    required_groups:
-      - sudo
-      - docker
-  - name: willshobwish
-    required_groups:
-      - sudo
-      - docker
-  - name: danielserezane
-    required_groups:
-      - sudo
-      - docker
-  - name: renanyudi
-    required_groups:
-      - sudo
-      - docker
