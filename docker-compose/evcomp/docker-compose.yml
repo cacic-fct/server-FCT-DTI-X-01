@@ -19,7 +19,7 @@ services:
       timeout: 5s
       retries: 10
     networks:
-      - internal
+      - default
 
   evcomp-api:
     image: ghcr.io/fct-devs/evcomp/backend:${IMAGE_TAG:-latest}
