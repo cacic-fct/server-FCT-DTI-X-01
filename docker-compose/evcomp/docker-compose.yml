@@ -79,4 +79,4 @@ services:
 networks:
   traefik:
     external: true
-  internal:
+  default:
