@@ -43,7 +43,6 @@ services:
         condition: service_healthy
     networks:
       - default
-      - traefik
     labels:
       - "wud.watch=true"
       - "wud.watch.digest=true"
@@ -61,6 +60,7 @@ services:
     depends_on:
       - evcomp-api
     networks:
+      - default
       - traefik
     labels:
       - "wud.watch=true"
