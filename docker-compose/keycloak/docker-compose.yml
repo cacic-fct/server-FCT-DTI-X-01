@@ -35,7 +35,6 @@ services:
       - "wud.display.name=keycloak"
       - "wud.link.template=https://github.com/keycloak/keycloak/releases/tag/$${major}.$${minor}.$${patch}"
       - "traefik.enable=true"
-      - "traefik.scope=public"
       - "traefik.docker.network=traefik"
       - "traefik.http.routers.keycloak.entryPoints=web, websecure"
       - "traefik.http.routers.keycloak.rule=Host(`sso.cacic.com.br`) || Host(`sso-admin.cacic.com.br`)"
