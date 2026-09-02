@@ -68,7 +68,6 @@ services:
       - "wud.tag.include=^latest$$"
       - "wud.display.name=evcomp-frontend"
       - "traefik.enable=true"
-      - "traefik.scope=public"
       - "traefik.docker.network=traefik"
       - "traefik.http.routers.evcomp.entrypoints=web,websecure"
       - "traefik.http.routers.evcomp.rule=Host(`secompp.com.br`) || Host(`evcomp.secompp.com.br`)"
