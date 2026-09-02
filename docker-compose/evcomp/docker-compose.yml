@@ -1,0 +1,82 @@
+name: evcomp
+
+services:
+  evcomp-db:
+    image: mysql:8.0
+    container_name: evcomp-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: evcomp
+      MYSQL_USER: ${DB_USER:-evcomp_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-evcomp_pass}
+      TZ: America/Sao_Paulo
+    volumes:
+      - /home/shared/docker-data/evcomp/db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - default
+
+  evcomp-api:
+    image: ghcr.io/fct-devs/evcomp/backend:${IMAGE_TAG:-latest}
+    container_name: evcomp-api
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - TZ=America/Sao_Paulo
+      - SPRING_PROFILES_ACTIVE=mysql
+      - SPRING_DATASOURCE_URL=jdbc:mysql://evcomp-db:3306/evcomp?useSSL=false&serverTimezone=America/Sao_Paulo&allowPublicKeyRetrieval=true
+      - DB_USER=${DB_USER:-evcomp_user}
+      - DB_PASSWORD=${DB_PASSWORD:-evcomp_pass}
+      - RESEND_API_KEY=${RESEND_API_KEY:-}
+      - JWT_SECRET=${JWT_SECRET:-}
+      - PAGAMENTO_ARMAZENAMENTO=BANCO
+    volumes:
+      - /home/shared/docker-data/evcomp/uploads:/app/uploads
+    depends_on:
+      evcomp-db:
+        condition: service_healthy
+    networks:
+      - default
+      - traefik
+    labels:
+      - "wud.watch=true"
+      - "wud.watch.digest=true"
+      - "wud.tag.include=^latest$$"
+      - "wud.display.name=evcomp-api"
+
+  evcomp-frontend:
+    image: ghcr.io/fct-devs/evcomp-front/frontend:${IMAGE_TAG:-latest}
+    container_name: evcomp-frontend
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - API_URL=http://evcomp-api:8080/api
+      - NEXT_TELEMETRY_DISABLED=1
+    depends_on:
+      - evcomp-api
+    networks:
+      - traefik
+    labels:
+      - "wud.watch=true"
+      - "wud.watch.digest=true"
+      - "wud.tag.include=^latest$$"
+      - "wud.display.name=evcomp-frontend"
+      - "traefik.enable=true"
+      - "traefik.scope=public"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.evcomp.entrypoints=web,websecure"
+      - "traefik.http.routers.evcomp.rule=Host(`secompp.com.br`) || Host(`evcomp.secompp.com.br`)"
+      - "traefik.http.routers.evcomp.tls=true"
+      - "traefik.http.routers.evcomp.service=evcomp-front-svc"
+      - "traefik.http.services.evcomp-front-svc.loadbalancer.server.port=3000"
+
+networks:
+  traefik:
+    external: true
+  default:

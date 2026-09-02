@@ -2,6 +2,7 @@
 compose_projects:
   - cacic-error-pages
   - crowdsec
+  - evcomp
   - prometheus
   - prometheus-node
   - traefik
