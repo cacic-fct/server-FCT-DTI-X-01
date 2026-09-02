@@ -8,6 +8,8 @@ compose_data_directories:
   - cacic-voto/redis
   - cacic-event-manager/db
   - cacic-event-manager/redis
+  - evcomp/db
+  - evcomp/uploads
   - novu/mongodb
   - crowdsec/opt/crowdsec
   - crowdsec/opt/crowdsec-db
