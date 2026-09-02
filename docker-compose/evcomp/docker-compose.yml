@@ -42,7 +42,7 @@ services:
       evcomp-db:
         condition: service_healthy
     networks:
-      - internal
+      - default
       - traefik
     labels:
       - "wud.watch=true"
