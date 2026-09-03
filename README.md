@@ -11,7 +11,7 @@ Ele instala e mantém:
 - Configuração pública versionada;
 - Overlays e segredos vindos do repositório privado.
 
-Depois do bootstrap inicial, o próprio servidor reaplica este repositório automaticamente a cada hora pelo timer:
+Depois do bootstrap inicial, o próprio servidor reaplica este repositório automaticamente todos os dias às **04:00** pelo timer:
 
 ```bash
 ansible-pull-fct-dti-x-01.timer
