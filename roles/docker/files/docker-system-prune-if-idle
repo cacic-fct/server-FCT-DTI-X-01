@@ -1,0 +1,79 @@
+#!/bin/sh
+set -eu
+
+max_wait_seconds="${1:-7200}"
+retry_seconds="${2:-60}"
+pull_quiet_period="${3:-15m}"
+waited_seconds=0
+
+log() {
+  printf '%s\n' "docker-system-prune: $*"
+}
+
+pull_client_is_active() {
+  for cmdline_path in /proc/[0-9]*/cmdline; do
+    [ -r "$cmdline_path" ] || continue
+    command_line=$(tr '\000' ' ' < "$cmdline_path" 2>/dev/null || true)
+
+    case "$command_line" in
+      *docker\ pull\ * | \
+      *docker\ image\ pull\ * | \
+      *docker\ compose\ pull\ * | \
+      *docker\ compose\ *\ pull\ * | \
+      *docker-compose\ pull\ * | \
+      *docker-compose\ *\ pull\ * | \
+      *docker\ compose\ *--pull* | \
+      *docker-compose\ *--pull*)
+        return 0
+        ;;
+    esac
+  done
+
+  return 1
+}
+
+recent_pull_was_observed() {
+  until_timestamp=$(date --iso-8601=seconds)
+  events=$(
+    timeout 15 docker events \
+      --since "$pull_quiet_period" \
+      --until "$until_timestamp" \
+      --filter type=image \
+      --filter event=pull \
+      --format '{{.Time}}' 2>/dev/null || true
+  )
+
+  [ -n "$events" ]
+}
+
+docker_is_busy_pulling() {
+  if systemctl is-active --quiet ansible-pull-fct-dti-x-01.service; then
+    log "waiting because ansible-pull may be pulling Compose images"
+    return 0
+  fi
+
+  if pull_client_is_active; then
+    log "waiting because a Docker pull client is active"
+    return 0
+  fi
+
+  if recent_pull_was_observed; then
+    log "waiting until Docker has had no pull event for $pull_quiet_period"
+    return 0
+  fi
+
+  return 1
+}
+
+while docker_is_busy_pulling; do
+  if [ "$waited_seconds" -ge "$max_wait_seconds" ]; then
+    log "skipping this run after waiting ${max_wait_seconds}s for pulls to finish"
+    exit 0
+  fi
+
+  sleep "$retry_seconds"
+  waited_seconds=$((waited_seconds + retry_seconds))
+done
+
+log "Docker is pull-idle; running docker system prune --all --force"
+exec docker system prune --all --force

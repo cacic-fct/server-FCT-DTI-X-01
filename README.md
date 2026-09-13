@@ -17,6 +17,15 @@ Depois do bootstrap inicial, o próprio servidor reaplica este repositório auto
 ansible-pull-fct-dti-x-01.timer
 ```
 
+O servidor também executa `docker system prune -a` aos domingos às **06:00**.
+O serviço aguarda até duas horas caso o `ansible-pull`, um cliente de pull ou
+eventos recentes indiquem download de imagens em andamento; sem uma janela de
+15 minutos sem pulls, a limpeza semanal é ignorada.
+
+```bash
+docker-system-prune.timer
+```
+
 **O servidor não faz deploy direto da branch `main`**.
 A branch de deploy é `production`, promovida automaticamente pelo GitHub Actions após validação.
 
@@ -122,12 +131,15 @@ sudo REPO_URL=https://github.com/cacic-fct/server-FCT-DTI-X-01.git \
 systemctl status ansible-pull-fct-dti-x-01.service
 systemctl status ansible-pull-fct-dti-x-01.timer
 systemctl list-timers ansible-pull-fct-dti-x-01.timer
+systemctl status docker-system-prune.timer
+systemctl list-timers docker-system-prune.timer
 ```
 
 Logs da última execução:
 
 ```bash
 journalctl -u ansible-pull-fct-dti-x-01.service -n 200 --no-pager
+journalctl -u docker-system-prune.service -n 100 --no-pager
 ```
 
 Executar manualmente:

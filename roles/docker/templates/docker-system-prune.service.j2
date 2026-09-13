@@ -1,0 +1,11 @@
+[Unit]
+Description=Prune unused Docker data when image pulls are idle
+Documentation={{ server_docs_url }}
+Requires=docker.service
+After=docker.service ansible-pull-fct-dti-x-01.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/docker-system-prune-if-idle {{ docker_system_prune_max_wait_seconds }} {{ docker_system_prune_retry_seconds }} {{ docker_system_prune_pull_quiet_period }}
+Nice=19
+IOSchedulingClass=idle

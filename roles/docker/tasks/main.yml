@@ -7,3 +7,6 @@
 
 - name: Load Docker service setup
   ansible.builtin.import_tasks: service.yml
+
+- name: Load Docker maintenance setup
+  ansible.builtin.import_tasks: maintenance.yml

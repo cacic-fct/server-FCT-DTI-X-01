@@ -1,0 +1,57 @@
+---
+- name: Install guarded Docker system prune helper
+  ansible.builtin.copy:
+    src: docker-system-prune-if-idle
+    dest: /usr/local/sbin/docker-system-prune-if-idle
+    owner: root
+    group: root
+    mode: "0755"
+  when: docker_system_prune_enabled | bool
+
+- name: Install Docker system prune service
+  ansible.builtin.template:
+    src: docker-system-prune.service.j2
+    dest: /etc/systemd/system/docker-system-prune.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart Docker system prune timer
+  when: docker_system_prune_enabled | bool
+
+- name: Install Docker system prune timer
+  ansible.builtin.template:
+    src: docker-system-prune.timer.j2
+    dest: /etc/systemd/system/docker-system-prune.timer
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart Docker system prune timer
+  when: docker_system_prune_enabled | bool
+
+- name: Enable Docker system prune timer
+  ansible.builtin.systemd:
+    name: docker-system-prune.timer
+    enabled: true
+    state: started
+    daemon_reload: true
+  when: docker_system_prune_enabled | bool
+
+- name: Disable Docker system prune timer
+  ansible.builtin.systemd:
+    name: docker-system-prune.timer
+    enabled: false
+    state: stopped
+    daemon_reload: true
+  failed_when: false
+  when: not (docker_system_prune_enabled | bool)
+
+- name: Remove disabled Docker system prune units and helper
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/systemd/system/docker-system-prune.service
+    - /etc/systemd/system/docker-system-prune.timer
+    - /usr/local/sbin/docker-system-prune-if-idle
+  notify: Reload systemd after Docker maintenance removal
+  when: not (docker_system_prune_enabled | bool)

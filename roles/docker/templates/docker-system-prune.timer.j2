@@ -1,0 +1,12 @@
+[Unit]
+Description=Run Docker system prune weekly
+Documentation={{ server_docs_url }}
+
+[Timer]
+OnCalendar={{ docker_system_prune_calendar }}
+Persistent=true
+RandomizedDelaySec=0
+Unit=docker-system-prune.service
+
+[Install]
+WantedBy=timers.target

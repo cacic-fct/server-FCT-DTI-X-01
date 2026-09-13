@@ -1,0 +1,12 @@
+---
+- name: Restart Docker system prune timer
+  ansible.builtin.systemd:
+    name: docker-system-prune.timer
+    enabled: true
+    state: restarted
+    daemon_reload: true
+  when: docker_system_prune_enabled | bool
+
+- name: Reload systemd after Docker maintenance removal
+  ansible.builtin.systemd:
+    daemon_reload: true
