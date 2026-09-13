@@ -1,0 +1,66 @@
+---
+- name: Require the telemetry wrapper for ARA recording
+  ansible.builtin.assert:
+    that: ansible_pull_deployment_telemetry_enabled | bool
+
+- name: Install Python virtual environment support
+  ansible.builtin.apt:
+    name: python3-venv
+    state: present
+
+- name: Create private ARA database directory
+  ansible.builtin.file:
+    path: "{{ ansible_pull_ara_data_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: Install ARA alongside the distribution Ansible
+  ansible.builtin.pip:
+    name:
+      - "ara[server]=={{ ansible_pull_ara_version }}"
+      - "django-health-check<4.0.0"
+    virtualenv: "{{ ansible_pull_ara_venv }}"
+    virtualenv_command: /usr/bin/python3 -m venv
+    virtualenv_site_packages: true
+
+# ansible-pull locates ansible and ansible-playbook beside its own executable.
+# These entry points use the distribution's Ansible without replacing it.
+- name: Install Ansible entry points using the ARA interpreter
+  ansible.builtin.template:
+    src: ara-ansible-cli.j2
+    dest: "{{ ansible_pull_ara_venv }}/bin/{{ item.name }}"
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - {name: ansible, module: adhoc}
+    - {name: ansible-playbook, module: playbook}
+    - {name: ansible-pull, module: pull}
+
+- name: Initialize ARA database and persistent settings
+  ansible.builtin.command:
+    argv:
+      - "{{ ansible_pull_ara_venv }}/bin/ara-manage"
+      - migrate
+      - --noinput
+  environment:
+    ARA_BASE_DIR: "{{ ansible_pull_ara_data_dir }}"
+    ARA_ALLOWED_HOSTS: '["ansible.cacic.com.br", "localhost", "127.0.0.1"]'
+    ARA_READ_LOGIN_REQUIRED: "false"
+    ARA_WRITE_LOGIN_REQUIRED: "true"
+    ARA_DATABASE_OPTIONS: '@json {"timeout": 30}'
+  register: ara_migrations
+  changed_when: "'No migrations to apply' not in ara_migrations.stdout"
+  no_log: true
+
+- name: Restrict ARA settings and database permissions
+  ansible.builtin.file:
+    path: "{{ ansible_pull_ara_data_dir }}/{{ item }}"
+    owner: root
+    group: root
+    mode: "0600"
+  loop:
+    - settings.yaml
+    - ansible.sqlite

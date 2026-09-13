@@ -1,0 +1,43 @@
+services:
+  ara:
+    # Upstream fedora44-pypi image, ARA 1.8.0. Keep recorder version in sync.
+    image: recordsansible/ara-api@sha256:9dfd6e18f474c2437081a0397310a264aa368b8364aea772c3b5b22bdd788cf5
+    restart: unless-stopped
+    # The host recorder owns the database. No host TCP port is published.
+    user: "0:0"
+    environment:
+      ARA_BASE_DIR: /home/shared/docker-data/ara
+      ARA_ALLOWED_HOSTS: '["ansible.cacic.com.br", "localhost", "127.0.0.1"]'
+      ARA_READ_LOGIN_REQUIRED: "false"
+      # Recording is offline; the web API must not accept anonymous writes.
+      ARA_WRITE_LOGIN_REQUIRED: "true"
+      ARA_DATABASE_OPTIONS: '@json {"timeout": 30}'
+    volumes:
+      - /home/shared/docker-data/ara:/home/shared/docker-data/ara
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthcheck/', timeout=5)"]
+      start_period: 60s
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.ara.rule=Host(`ansible.cacic.com.br`)"
+      - "traefik.http.routers.ara.entrypoints=websecure"
+      - "traefik.http.routers.ara.tls=true"
+      - "traefik.http.routers.ara.middlewares=authentik@docker,noindex@file"
+      - "traefik.http.routers.ara.service=ara"
+      - "traefik.http.services.ara.loadbalancer.server.port=8000"
+      # Explicit v3 rule, independent of the legacy wildcard Authentik router.
+      - "traefik.http.routers.ara-auth.rule=Host(`ansible.cacic.com.br`) && PathPrefix(`/outpost.goauthentik.io/`)"
+      - "traefik.http.routers.ara-auth.priority=100"
+      - "traefik.http.routers.ara-auth.entrypoints=websecure"
+      - "traefik.http.routers.ara-auth.tls=true"
+      - "traefik.http.routers.ara-auth.service=authentik-svc@docker"
+    networks:
+      - traefik
+
+networks:
+  traefik:
+    external: true

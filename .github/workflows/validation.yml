@@ -83,6 +83,9 @@ jobs:
       - name: Run ansible-lint
         run: ansible-lint --profile min
 
+      - name: Test ARA recording and deployment links
+        run: python -m unittest discover -s tests -v
+
       - name: Validate Docker Compose projects
         run: ./scripts/validate-compose-config.sh
 

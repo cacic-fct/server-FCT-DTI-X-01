@@ -2,6 +2,10 @@
 ansible_pull_deployment_telemetry_enabled: false
 ansible_pull_verbosity: 2
 ansible_pull_show_diff: true
+ansible_pull_ara_enabled: false
+ansible_pull_ara_version: "1.8.0"
+ansible_pull_ara_venv: /opt/ara/venv
+ansible_pull_ara_data_dir: "{{ docker_data_root }}/ara"
 ansible_pull_deployment_telemetry_wrapper_path: /usr/local/libexec/ansible-pull/github-deployment-telemetry-ansible-pull
 ansible_pull_deployment_telemetry_repo_url: "{{ ansible_pull_repo_url }}"
 ansible_pull_deployment_telemetry_environment: production

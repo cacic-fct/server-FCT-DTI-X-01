@@ -8,6 +8,7 @@ import sys
 import urllib.error
 import urllib.parse
 import urllib.request
+import uuid
 
 
 GITHUB_API = "https://api.github.com"
@@ -145,7 +146,7 @@ def create_status(token, owner, repo, deployment_id, state, description):
 
 def ansible_pull_argv():
     argv = [
-        "/usr/bin/ansible-pull",
+        env("ANSIBLE_PULL_EXECUTABLE", "/usr/bin/ansible-pull"),
         "--url",
         env("ANSIBLE_PULL_REPO"),
         "--checkout",
@@ -163,6 +164,40 @@ def ansible_pull_argv():
         argv.append("--diff")
     argv.append(env("ANSIBLE_PULL_PLAYBOOK"))
     return argv
+
+
+def configure_ara():
+    """Enable the offline recorder only after its repository-driven bootstrap."""
+    if not enabled(env("ANSIBLE_PULL_ARA_ENABLED", "false")):
+        return
+
+    venv = env("ANSIBLE_PULL_ARA_VENV", "/opt/ara/venv")
+    try:
+        result = subprocess.run(
+            [f"{venv}/bin/python", "-m", "ara.setup.callback_plugins"],
+            check=True, capture_output=True, text=True, timeout=30,
+        )
+        callback_path = result.stdout.strip()
+        if not callback_path or not os.path.isfile(f"{venv}/bin/ansible-pull"):
+            raise RuntimeError("ARA Ansible entry points are not installed")
+    except (OSError, RuntimeError, subprocess.SubprocessError) as exc:
+        warn(f"ARA recorder unavailable; using distribution Ansible: {exc}")
+        return
+
+    os.environ["ANSIBLE_PULL_EXECUTABLE"] = f"{venv}/bin/ansible-pull"
+    previous_paths = env("ANSIBLE_CALLBACK_PLUGINS")
+    os.environ["ANSIBLE_CALLBACK_PLUGINS"] = os.pathsep.join(
+        path for path in (callback_path, previous_paths) if path
+    )
+    run_label = f"ansible-pull-{uuid.uuid4().hex}"
+    os.environ["ARA_DEFAULT_LABELS"] = ",".join(
+        label for label in (env("ARA_DEFAULT_LABELS"), run_label) if label
+    )
+    report_url = env("GITHUB_DEPLOYMENT_ENVIRONMENT_URL")
+    if report_url:
+        os.environ["GITHUB_DEPLOYMENT_LOG_URL"] = (
+            f"{report_url.rstrip('/')}/?{urllib.parse.urlencode({'label': run_label})}"
+        )
 
 
 def print_diagnostic_command(title, argv, cwd=None):
@@ -274,14 +309,14 @@ def report_deployment(revision, state, description):
 
 
 def main():
+    configure_ara()
     telemetry_enabled = enabled(env("GITHUB_DEPLOYMENT_TELEMETRY_ENABLED", "false"))
-    previous_revision = checkout_revision() if telemetry_enabled else None
 
     try:
         return_code = run_ansible_pull()
     except Exception as exc:
         current_revision = checkout_revision() if telemetry_enabled else None
-        if current_revision and current_revision != previous_revision:
+        if current_revision:
             report_deployment(
                 current_revision,
                 "error",
@@ -293,9 +328,9 @@ def main():
         return return_code
 
     current_revision = checkout_revision()
-    if not current_revision or current_revision == previous_revision:
+    if not current_revision:
         print(
-            "Skipping GitHub deployment telemetry: ansible-pull checkout revision is unchanged.",
+            "Skipping GitHub deployment telemetry: no checkout revision is available.",
             file=sys.stderr,
         )
         return return_code

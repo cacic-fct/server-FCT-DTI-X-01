@@ -5,5 +5,9 @@
 - name: Load ansible-pull environment setup
   ansible.builtin.import_tasks: environment.yml
 
+- name: Install local ARA recorder
+  ansible.builtin.import_tasks: ara.yml
+  when: ansible_pull_ara_enabled | bool
+
 - name: Load ansible-pull systemd setup
   ansible.builtin.import_tasks: systemd.yml

@@ -1,3 +1,5 @@
 ansible
 ansible-lint
 pyyaml
+ara[server]==1.8.0
+django-health-check<4.0.0

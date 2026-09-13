@@ -1,0 +1,5 @@
+#!{{ ansible_pull_ara_venv }}/bin/python
+from ansible.cli.{{ item.module }} import main
+
+if __name__ == "__main__":
+    main()
