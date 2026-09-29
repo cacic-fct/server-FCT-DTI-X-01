@@ -44,7 +44,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    restart: unless-stopped
+    restart: always
     networks:
       - default
 
@@ -58,7 +58,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    restart: unless-stopped
+    restart: always
     networks:
       - default
 
@@ -102,6 +102,7 @@ services:
       - sh
       - -c
       - |
+        set -e
         cd /app/apps/backend
         ../../node_modules/.bin/prisma migrate deploy --config prisma.config.ts
         cd /app
@@ -111,7 +112,17 @@ services:
         condition: service_healthy
       events-redis:
         condition: service_healthy
-    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/api/health/ready', { signal: AbortSignal.timeout(4000) }).then(response => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: always
     labels:
       - "wud.watch=true"
       - "wud.watch.digest=true"
@@ -139,8 +150,8 @@ services:
       PORT: 4000
     depends_on:
       events-backend:
-        condition: service_started
-    restart: unless-stopped
+        condition: service_healthy
+    restart: always
     labels:
       - "wud.watch=true"
       - "wud.watch.digest=true"
@@ -177,8 +188,8 @@ services:
       SITEMAP_API_URL: ${SITEMAP_API_URL:-http://events-backend:3000/api/graphql}
     depends_on:
       events-backend:
-        condition: service_started
-    restart: unless-stopped
+        condition: service_healthy
+    restart: always
     labels:
       - "wud.watch=true"
       - "wud.watch.digest=true"

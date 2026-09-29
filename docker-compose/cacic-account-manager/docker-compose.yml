@@ -46,7 +46,7 @@ services:
       retries: 5
     networks:
       - postgres_network
-    restart: unless-stopped
+    restart: always
 
   redis:
     image: redis:7-alpine
@@ -60,7 +60,7 @@ services:
       retries: 5
     networks:
       - redis_network
-    restart: unless-stopped
+    restart: always
 
   cacic-account-manager-backend:
     image: ghcr.io/cacic-fct/account-manager/account-backend:latest
@@ -77,6 +77,7 @@ services:
       - sh
       - -c
       - |
+        set -e
         cd /app/apps/account-backend
         ../../node_modules/.bin/prisma migrate deploy --config prisma.config.ts
         cd /app
@@ -86,7 +87,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    restart: unless-stopped
+    restart: always
     networks:
       - postgres_network
       - redis_network
@@ -110,7 +111,7 @@ services:
 
   cacic-account-manager-frontend:
     image: ghcr.io/cacic-fct/account-manager/account-frontend:latest
-    restart: unless-stopped
+    restart: always
     networks:
       - traefik
     labels:
