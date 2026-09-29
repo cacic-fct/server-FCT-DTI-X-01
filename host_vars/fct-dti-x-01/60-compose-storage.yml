@@ -11,6 +11,7 @@ compose_data_directories:
   - evcomp/db
   - evcomp/uploads
   - novu/mongodb
+  - portainer
   - crowdsec/opt/crowdsec
   - crowdsec/opt/crowdsec-db
   - crowdsec/traefikLogs

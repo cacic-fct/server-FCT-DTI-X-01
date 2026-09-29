@@ -6,6 +6,7 @@ compose_projects:
   - prometheus
   - prometheus-node
   - traefik
+  - portainer
   - fake-smtp
   - authentik
   - ara
@@ -36,6 +37,7 @@ compose_public_paths_moved_to_secrets:
   - traefik/providers/crowdsec.yml
 
 compose_required_secret_overlay_files:
+  - portainer/admin-password
   - cacic-account-manager/.env
   - cacic-voto/.env
   - cacic-event-manager/.env

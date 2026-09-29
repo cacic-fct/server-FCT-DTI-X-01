@@ -1,0 +1,30 @@
+services:
+  portainer:
+    image: portainer/portainer-ce:2.45.1
+    container_name: portainer
+    restart: unless-stopped
+    command:
+      - --http-enabled
+      - --admin-password-file
+      - /run/secrets/admin-password
+      - --trusted-origins
+      - portainer.cacic.com.br
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /home/shared/docker-data/portainer:/data
+      - ./admin-password:/run/secrets/admin-password:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.portainer.rule=Host(`portainer.cacic.com.br`)"
+      - "traefik.http.routers.portainer.entrypoints=websecure"
+      - "traefik.http.routers.portainer.tls=true"
+      - "traefik.http.routers.portainer.middlewares=noindex@file"
+      - "traefik.http.routers.portainer.service=portainer"
+      - "traefik.http.services.portainer.loadbalancer.server.port=9000"
+    networks:
+      - traefik
+
+networks:
+  traefik:
+    external: true
