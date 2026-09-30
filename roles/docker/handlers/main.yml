@@ -1,5 +1,5 @@
 ---
-- name: Restart Docker system prune timer
+- name: Restart Docker image prune timer
   ansible.builtin.systemd:
     name: docker-system-prune.timer
     enabled: true

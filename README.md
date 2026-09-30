@@ -17,10 +17,12 @@ Depois do bootstrap inicial, o próprio servidor reaplica este repositório auto
 ansible-pull-fct-dti-x-01.timer
 ```
 
-O servidor também executa `docker system prune -a` aos domingos às **06:00**.
-O serviço aguarda até duas horas caso o `ansible-pull`, um cliente de pull ou
-eventos recentes indiquem download de imagens em andamento; sem uma janela de
-15 minutos sem pulls, a limpeza semanal é ignorada.
+O servidor também executa `docker image prune -a -f` aos domingos às **06:00**.
+Isso remove imagens que não são usadas por nenhum container,
+para garantir que o servidor não fique sem espaço de armazenamento.
+O serviço aguarda até duas horas caso o `ansible-pull`, um cliente de pull
+ou eventos recentes indiquem download de imagens em andamento;
+sem uma janela de 15 minutos sem pulls, a limpeza semanal é ignorada.
 
 ```bash
 docker-system-prune.timer

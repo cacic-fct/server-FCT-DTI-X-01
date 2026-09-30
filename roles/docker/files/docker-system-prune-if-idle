@@ -75,5 +75,5 @@ while docker_is_busy_pulling; do
   waited_seconds=$((waited_seconds + retry_seconds))
 done
 
-log "Docker is pull-idle; running docker system prune --all --force"
-exec docker system prune --all --force
+log "Docker is pull-idle; running docker image prune --all --force"
+exec docker image prune --all --force
