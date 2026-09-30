@@ -1,7 +1,19 @@
 ---
+- name: Initialize compose project deployment failures
+  ansible.builtin.set_fact:
+    compose_project_deployment_failures: []
+
 - name: Apply compose projects
   ansible.builtin.include_tasks: deploy-project.yml
   loop: "{{ compose_projects }}"
   loop_control:
     loop_var: compose_project
     label: "{{ compose_project }}"
+
+- name: Fail after all compose projects have been attempted
+  ansible.builtin.fail:
+    msg: >-
+      Docker Compose deployment failed for the following projects:
+      {{ compose_project_deployment_failures | map(attribute='project') | join(', ') }}.
+      Per-project diagnostics are available above.
+  when: compose_project_deployment_failures | length > 0

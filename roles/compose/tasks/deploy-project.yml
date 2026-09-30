@@ -40,8 +40,17 @@
           - "docker compose ps stdout: {{ compose_project_failure_status.stdout | default('') }}"
           - "docker compose ps stderr: {{ compose_project_failure_status.stderr | default('') }}"
 
-    - name: Fail compose project deployment
-      ansible.builtin.fail:
-        msg: >-
-          Docker Compose deployment failed for {{ docker_compose_root }}/{{ compose_project }}.
-          See the diagnostic lines above for the module result and current compose project status.
+    - name: Record compose project deployment failure
+      ansible.builtin.set_fact:
+        compose_project_deployment_failures: >-
+          {{
+            compose_project_deployment_failures
+            + [
+                {
+                  'project': compose_project,
+                  'task': ansible_failed_task.name | default('unknown'),
+                  'message': ansible_failed_result.msg | default(''),
+                  'exit_code': ansible_failed_result.rc | default('unknown')
+                }
+              ]
+          }}
