@@ -1,0 +1,58 @@
+---
+- name: Resolve the effective Compose project configuration
+  ansible.builtin.command: docker compose config --format json
+  args:
+    chdir: "{{ docker_compose_root }}/{{ compose_project }}"
+  register: compose_project_recovery_config
+  changed_when: false
+  # The resolved configuration can contain secrets from environment files.
+  no_log: true
+
+- name: Record the effective Compose project name
+  ansible.builtin.set_fact:
+    compose_project_recovery_name: "{{ (compose_project_recovery_config.stdout | from_json).name }}"
+  no_log: true
+
+- name: Require a project name before selecting resources for removal
+  ansible.builtin.assert:
+    that:
+      - compose_project_recovery_name is string
+      - compose_project_recovery_name | length > 0
+
+- name: Find containers owned by the failed compose project
+  ansible.builtin.command:
+    argv:
+      - docker
+      - container
+      - ls
+      - --all
+      - --quiet
+      - --filter
+      - "label=com.docker.compose.project={{ compose_project_recovery_name }}"
+  register: compose_project_recovery_containers
+  changed_when: false
+
+- name: Remove containers with stale network references
+  ansible.builtin.command:
+    argv: "{{ ['docker', 'container', 'rm', '--force'] + compose_project_recovery_containers.stdout_lines }}"
+  when: compose_project_recovery_containers.stdout_lines | length > 0
+
+- name: Find networks owned by the failed compose project
+  ansible.builtin.command:
+    argv:
+      - docker
+      - network
+      - ls
+      - --quiet
+      - --filter
+      - "label=com.docker.compose.project={{ compose_project_recovery_name }}"
+  register: compose_project_recovery_networks
+  changed_when: false
+
+- name: Remove managed networks owned by the failed compose project
+  ansible.builtin.command:
+    argv: "{{ ['docker', 'network', 'rm'] + compose_project_recovery_networks.stdout_lines }}"
+  register: compose_project_recovery_network_removal
+  changed_when: compose_project_recovery_network_removal.rc == 0
+  failed_when: false
+  when: compose_project_recovery_networks.stdout_lines | length > 0

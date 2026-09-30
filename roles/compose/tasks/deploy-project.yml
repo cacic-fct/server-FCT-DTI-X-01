@@ -17,30 +17,123 @@
       ansible.builtin.debug:
         msg: "Docker Compose services in {{ docker_compose_root }}/{{ compose_project }} are up (changed={{ compose_project_apply.changed }})"
   rescue:
-    - name: Collect compose project status after failure
+    - name: Record the original compose deployment failure
+      ansible.builtin.set_fact:
+        compose_project_initial_failure_task: "{{ ansible_failed_task.name | default('unknown') }}"
+        compose_project_initial_failure_message: "{{ ansible_failed_result.msg | default('') }}"
+        compose_project_initial_failure_rc: "{{ ansible_failed_result.rc | default('unknown') }}"
+        compose_project_initial_failure_stdout: "{{ ansible_failed_result.stdout | default('') }}"
+        compose_project_initial_failure_stderr: "{{ ansible_failed_result.stderr | default('') }}"
+        compose_project_initial_failure_actions: "{{ ansible_failed_result.actions | default([]) }}"
+        compose_project_initial_failure_containers: "{{ ansible_failed_result.containers | default([]) }}"
+        compose_project_initial_failure_text: >-
+          {{ [ansible_failed_result.msg | default(''),
+              ansible_failed_result.stdout | default(''),
+              ansible_failed_result.stderr | default('')] | join(' ') }}
+
+    - name: Identify a missing Docker network ID failure
+      ansible.builtin.set_fact:
+        compose_project_stale_network_failure: >-
+          {{
+            ('failed to set up container networking' in (compose_project_initial_failure_text | lower))
+            and ((compose_project_initial_failure_text | lower) is search('network [0-9a-f]{64} not found'))
+          }}
+
+    - name: Reset stale network recovery result for this project
+      ansible.builtin.set_fact:
+        compose_project_stale_network_recovery_succeeded: false
+
+    - name: Recover from a stale Docker network reference and retry deployment
+      when: compose_project_stale_network_failure | bool
+      block:
+        - name: Announce project-scoped stale network recovery
+          ansible.builtin.debug:
+            msg: >-
+              Docker reported a missing network ID while deploying {{ compose_project }}.
+              Removing only this Compose project's containers and managed networks,
+              preserving volumes and external networks, then retrying deployment.
+
+        - name: Remove containers and managed networks for the failed project
+          ansible.builtin.include_tasks: recover-stale-network.yml
+
+        - name: Reconcile external Docker networks before retrying
+          ansible.builtin.include_tasks: networks.yml
+
+        - name: Retry compose project deployment after stale network recovery
+          community.docker.docker_compose_v2:
+            project_src: "{{ docker_compose_root }}/{{ compose_project }}"
+            pull: "{{ 'always' if compose_pull_before_up else 'missing' }}"
+            remove_orphans: "{{ compose_remove_orphans | default(false) }}"
+            state: present
+          register: compose_project_apply
+
+        - name: Record successful stale network recovery
+          ansible.builtin.set_fact:
+            compose_project_stale_network_recovery_succeeded: true
+      rescue:
+        - name: Record stale network recovery failure details
+          ansible.builtin.set_fact:
+            compose_project_recovery_failure_task: "{{ ansible_failed_task.name | default('unknown') }}"
+            compose_project_recovery_failure_message: "{{ ansible_failed_result.msg | default('') }}"
+            compose_project_recovery_failure_rc: "{{ ansible_failed_result.rc | default('unknown') }}"
+            compose_project_recovery_failure_stdout: "{{ ansible_failed_result.stdout | default('') }}"
+            compose_project_recovery_failure_stderr: "{{ ansible_failed_result.stderr | default('') }}"
+
+    - name: Collect compose project status after terminal deployment failure
       ansible.builtin.command: docker compose ps --all
       args:
         chdir: "{{ docker_compose_root }}/{{ compose_project }}"
       register: compose_project_failure_status
       changed_when: false
       failed_when: false
+      when: not (compose_project_stale_network_recovery_succeeded | bool)
+
+    - name: Select terminal compose deployment failure details
+      ansible.builtin.set_fact:
+        compose_project_terminal_failure_task: >-
+          {{ compose_project_recovery_failure_task
+            if (compose_project_stale_network_failure | bool)
+            else compose_project_initial_failure_task }}
+        compose_project_terminal_failure_message: >-
+          {{ compose_project_recovery_failure_message
+            if (compose_project_stale_network_failure | bool)
+            else compose_project_initial_failure_message }}
+        compose_project_terminal_failure_rc: >-
+          {{ compose_project_recovery_failure_rc
+            if (compose_project_stale_network_failure | bool)
+            else compose_project_initial_failure_rc }}
+        compose_project_terminal_failure_stdout: >-
+          {{ compose_project_recovery_failure_stdout
+            if (compose_project_stale_network_failure | bool)
+            else compose_project_initial_failure_stdout }}
+        compose_project_terminal_failure_stderr: >-
+          {{ compose_project_recovery_failure_stderr
+            if (compose_project_stale_network_failure | bool)
+            else compose_project_initial_failure_stderr }}
+      when: not (compose_project_stale_network_recovery_succeeded | bool)
 
     - name: Print compose project deployment failure details
       ansible.builtin.debug:
         msg:
           - "Docker Compose deployment failed for {{ docker_compose_root }}/{{ compose_project }}"
-          - "Failed task: {{ ansible_failed_task.name | default('unknown') }}"
-          - "Failure message: {{ ansible_failed_result.msg | default('') }}"
-          - "Exit code: {{ ansible_failed_result.rc | default('unknown') }}"
-          - "stdout: {{ ansible_failed_result.stdout | default('') }}"
-          - "stderr: {{ ansible_failed_result.stderr | default('') }}"
-          - "Compose actions: {{ ansible_failed_result.actions | default([]) }}"
-          - "Compose containers: {{ ansible_failed_result.containers | default([]) }}"
+          - "Initial failed task: {{ compose_project_initial_failure_task }}"
+          - "Initial failure message: {{ compose_project_initial_failure_message }}"
+          - "Initial exit code: {{ compose_project_initial_failure_rc }}"
+          - "Initial stdout: {{ compose_project_initial_failure_stdout }}"
+          - "Initial stderr: {{ compose_project_initial_failure_stderr }}"
+          - "Compose actions: {{ compose_project_initial_failure_actions }}"
+          - "Compose containers: {{ compose_project_initial_failure_containers }}"
+          - "Terminal failed task: {{ compose_project_terminal_failure_task }}"
+          - "Terminal failure message: {{ compose_project_terminal_failure_message }}"
+          - "Terminal exit code: {{ compose_project_terminal_failure_rc }}"
+          - "Terminal stdout: {{ compose_project_terminal_failure_stdout }}"
+          - "Terminal stderr: {{ compose_project_terminal_failure_stderr }}"
           - "docker compose ps exit code: {{ compose_project_failure_status.rc | default('unknown') }}"
           - "docker compose ps stdout: {{ compose_project_failure_status.stdout | default('') }}"
           - "docker compose ps stderr: {{ compose_project_failure_status.stderr | default('') }}"
+      when: not (compose_project_stale_network_recovery_succeeded | bool)
 
-    - name: Record compose project deployment failure
+    - name: Record terminal compose project deployment failure
       ansible.builtin.set_fact:
         compose_project_deployment_failures: >-
           {{
@@ -48,9 +141,10 @@
             + [
                 {
                   'project': compose_project,
-                  'task': ansible_failed_task.name | default('unknown'),
-                  'message': ansible_failed_result.msg | default(''),
-                  'exit_code': ansible_failed_result.rc | default('unknown')
+                  'task': compose_project_terminal_failure_task,
+                  'message': compose_project_terminal_failure_message,
+                  'exit_code': compose_project_terminal_failure_rc
                 }
               ]
           }}
+      when: not (compose_project_stale_network_recovery_succeeded | bool)
