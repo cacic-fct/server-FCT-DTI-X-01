@@ -5,10 +5,8 @@ services:
     restart: unless-stopped
     command:
       - --http-enabled
-      - --admin-password-file
-      - /run/secrets/admin-password
-      - --trusted-origins
-      - portainer.cacic.com.br
+      - --admin-password-file=/run/secrets/admin-password
+      - --trusted-origins=https://portainer.cacic.com.br
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /home/shared/docker-data/portainer:/data
