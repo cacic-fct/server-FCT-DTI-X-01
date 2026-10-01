@@ -1,5 +1,5 @@
 [Unit]
-Description=Prune unused Docker images when image pulls are idle
+Description=Prune unused Docker images after ansible-pull and image pulls are idle
 Documentation={{ server_docs_url }}
 Requires=docker.service
 After=docker.service ansible-pull-fct-dti-x-01.service

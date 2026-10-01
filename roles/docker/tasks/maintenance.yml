@@ -15,43 +15,54 @@
     owner: root
     group: root
     mode: "0644"
-  notify: Restart Docker image prune timer
   when: docker_system_prune_enabled | bool
 
-- name: Install Docker image prune timer
+- name: Ensure the ansible-pull service drop-in directory exists
+  ansible.builtin.file:
+    path: /etc/systemd/system/ansible-pull-fct-dti-x-01.service.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when: docker_system_prune_enabled | bool
+
+- name: Install ansible-pull completion hook for Docker image pruning
   ansible.builtin.template:
-    src: docker-system-prune.timer.j2
-    dest: /etc/systemd/system/docker-system-prune.timer
+    src: ansible-pull-docker-prune.conf.j2
+    dest: /etc/systemd/system/ansible-pull-fct-dti-x-01.service.d/docker-system-prune.conf
     owner: root
     group: root
     mode: "0644"
-  notify: Restart Docker image prune timer
   when: docker_system_prune_enabled | bool
 
-- name: Enable Docker image prune timer
-  ansible.builtin.systemd:
-    name: docker-system-prune.timer
-    enabled: true
-    state: started
-    daemon_reload: true
-  when: docker_system_prune_enabled | bool
+- name: Check for the legacy Docker image prune timer
+  ansible.builtin.stat:
+    path: /etc/systemd/system/docker-system-prune.timer
+  register: docker_system_prune_legacy_timer
 
-- name: Disable Docker image prune timer
+- name: Disable the legacy Docker image prune timer
   ansible.builtin.systemd:
     name: docker-system-prune.timer
     enabled: false
     state: stopped
-    daemon_reload: true
   failed_when: false
-  when: not (docker_system_prune_enabled | bool)
+  when: docker_system_prune_legacy_timer.stat.exists
 
-- name: Remove disabled Docker image prune units and helper
+- name: Remove the legacy Docker image prune timer unit
+  ansible.builtin.file:
+    path: /etc/systemd/system/docker-system-prune.timer
+    state: absent
+
+- name: Remove disabled Docker image prune configuration
   ansible.builtin.file:
     path: "{{ item }}"
     state: absent
   loop:
     - /etc/systemd/system/docker-system-prune.service
-    - /etc/systemd/system/docker-system-prune.timer
     - /usr/local/sbin/docker-system-prune-if-idle
-  notify: Reload systemd after Docker maintenance removal
+    - /etc/systemd/system/ansible-pull-fct-dti-x-01.service.d/docker-system-prune.conf
   when: not (docker_system_prune_enabled | bool)
+
+- name: Reload systemd after Docker maintenance configuration
+  ansible.builtin.systemd:
+    daemon_reload: true

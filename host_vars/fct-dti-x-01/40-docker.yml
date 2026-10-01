@@ -2,7 +2,6 @@
 docker_apt_arch: "{{ 'amd64' if ansible_architecture == 'x86_64' else ansible_architecture }}"
 
 docker_system_prune_enabled: true
-docker_system_prune_calendar: "Sun *-*-* 06:00:00"
 docker_system_prune_max_wait_seconds: 7200
 docker_system_prune_retry_seconds: 60
 docker_system_prune_pull_quiet_period: 15m
