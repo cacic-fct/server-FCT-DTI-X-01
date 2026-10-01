@@ -52,7 +52,7 @@ services:
     image: redis:8-alpine
     command: redis-server --appendonly yes
     volumes:
-      - /home/shared/docker-data/cacic-event-manager/redis:/data
+      - /home/shared/docker-data/cacic-event-manager/redis-2:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
