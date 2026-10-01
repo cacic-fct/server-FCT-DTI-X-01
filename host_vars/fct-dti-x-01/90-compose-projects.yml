@@ -56,6 +56,22 @@ compose_secret_overlay_cleanup_patterns:
   - "*.secret.*"
   - crowdsec.yml
 
+# The SeaweedFS image drops privileges to uid:gid 1000:1000 before reading
+# its bind-mounted configuration files. Keep those files private to that user.
+compose_secret_overlay_file_permissions:
+  seaweedfs/etc/seaweed/filer.toml:
+    owner: "1000"
+    group: "1000"
+    mode: "0400"
+  seaweedfs/etc/seaweed/s3_config.json:
+    owner: "1000"
+    group: "1000"
+    mode: "0400"
+  seaweedfs/etc/seaweed/security.toml:
+    owner: "1000"
+    group: "1000"
+    mode: "0400"
+
 compose_secret_overlay_exclude_patterns:
   - acme.json
   - acme-ip.json
