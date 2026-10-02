@@ -133,10 +133,19 @@
     argv: "{{ server_secrets_github_app_ghcr_token_argv }}"
   register: server_secrets_github_app_ghcr_token
   changed_when: false
+  failed_when: false
   become_user: "{{ server_secrets_github_app_user }}"
   environment:
     HOME: "{{ server_secrets_github_app_home }}"
   no_log: true
+
+- name: Report GitHub App token helper failure
+  ansible.builtin.fail:
+    msg: >-
+      GitHub App token helper failed (exit code
+      {{ server_secrets_github_app_ghcr_token.rc | default('unknown') }}):
+      {{ server_secrets_github_app_ghcr_token.stderr | default('No diagnostic was returned.', true) }}
+  when: (server_secrets_github_app_ghcr_token.rc | default(1) | int) != 0
 
 - name: Authenticate Docker to GHCR with GitHub App token
   community.docker.docker_login:
