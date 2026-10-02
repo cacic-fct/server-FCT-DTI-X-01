@@ -1,0 +1,9 @@
+http:
+  middlewares:
+    account-manager-silent-sso-security:
+      headers:
+        customFrameOptionsValue: SAMEORIGIN
+
+    cacic-voto-silent-sso-security:
+      headers:
+        customFrameOptionsValue: SAMEORIGIN

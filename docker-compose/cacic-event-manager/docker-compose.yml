@@ -206,6 +206,20 @@ services:
       - "traefik.http.routers.event-manager-public.service=event-manager-public-svc"
       - "traefik.http.services.event-manager-public-svc.loadbalancer.server.port=4000"
 
+      - "traefik.http.routers.event-manager-public-silent-sso.entrypoints=web,websecure"
+      - "traefik.http.routers.event-manager-public-silent-sso.rule=Host(`eventos.cacic.com.br`) && Path(`/app/silent-check-sso.html`)"
+      - "traefik.http.routers.event-manager-public-silent-sso.priority=10000"
+      - "traefik.http.routers.event-manager-public-silent-sso.tls=true"
+      - "traefik.http.routers.event-manager-public-silent-sso.middlewares=event-manager-public-silent-sso-security@file"
+      - "traefik.http.routers.event-manager-public-silent-sso.service=event-manager-public-svc"
+
+      - "traefik.http.routers.event-manager-admin-silent-sso.entrypoints=web,websecure"
+      - "traefik.http.routers.event-manager-admin-silent-sso.rule=Host(`eventos.cacic.com.br`) && Path(`/admin/silent-check-sso.html`)"
+      - "traefik.http.routers.event-manager-admin-silent-sso.priority=10000"
+      - "traefik.http.routers.event-manager-admin-silent-sso.tls=true"
+      - "traefik.http.routers.event-manager-admin-silent-sso.middlewares=event-manager-admin-silent-sso-security@file"
+      - "traefik.http.routers.event-manager-admin-silent-sso.service=event-manager-admin-svc"
+
       - "traefik.http.routers.event-manager-root.entrypoints=web,websecure"
       - "traefik.http.routers.event-manager-root.rule=Host(`eventos.cacic.com.br`) && Path(`/`)"
       - "traefik.http.routers.event-manager-root.tls=true"
