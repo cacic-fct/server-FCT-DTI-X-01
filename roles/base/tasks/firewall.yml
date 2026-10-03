@@ -1,4 +1,22 @@
 ---
+- name: Preserve Docker rules when netfilter-persistent reloads the firewall
+  ansible.builtin.lineinfile:
+    path: /etc/default/netfilter-persistent
+    regexp: "^\\s*#?\\s*{{ item.key }}="
+    line: "{{ item.key }}={{ item.value }}"
+    create: true
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - {key: FLUSH_ON_STOP, value: "0"}
+    - {key: IPTABLES_RESTORE_NOFLUSH, value: "yes"}
+    - {key: IP6TABLES_RESTORE_NOFLUSH, value: "yes"}
+    # Docker's live rules must not become a stale snapshot in rules.v4/v6.
+    - {key: IPTABLES_SKIP_SAVE, value: "yes"}
+    - {key: IP6TABLES_SKIP_SAVE, value: "yes"}
+  when: firewall_apply_ipv4_policy | default(false)
+
 - name: Configure IPv4 firewall rules
   ansible.builtin.template:
     src: rules.v4.j2
