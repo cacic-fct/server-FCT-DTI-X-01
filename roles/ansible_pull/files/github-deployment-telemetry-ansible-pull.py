@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
+import hashlib
 import json
 import os
 import re
 import shlex
+import socket
 import subprocess
 import sys
 import urllib.error
@@ -13,6 +15,9 @@ import uuid
 
 GITHUB_API = "https://api.github.com"
 USER_AGENT = "server-FCT-DTI-X-01-ansible-pull-deployment-telemetry"
+# The playbook can replace this file while this process is still running.
+with open(__file__, "rb") as source:
+    WRAPPER_SHA256 = hashlib.sha256(source.read()).hexdigest()
 
 
 def env(name, default=""):
@@ -118,6 +123,11 @@ def create_deployment(token, owner, repo, revision):
         "description": f"Apply {environment} on {env('SERVER_ID', 'server')}",
         "auto_merge": False,
         "required_contexts": [],
+        "payload": {
+            "runner_hostname": socket.gethostname(),
+            "wrapper_sha256": WRAPPER_SHA256,
+            "systemd_invocation_id": env("INVOCATION_ID"),
+        },
         "production_environment": enabled(env("GITHUB_DEPLOYMENT_PRODUCTION_ENVIRONMENT", "true")),
         "transient_environment": enabled(env("GITHUB_DEPLOYMENT_TRANSIENT_ENVIRONMENT", "false")),
     }

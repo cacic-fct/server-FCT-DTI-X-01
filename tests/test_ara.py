@@ -20,6 +20,27 @@ spec.loader.exec_module(telemetry)
 
 
 class DeploymentLinks(unittest.TestCase):
+    def test_deployment_identifies_runner_and_executed_revision(self):
+        with patch.dict(os.environ, {
+            "ANSIBLE_PULL_VERSION": "production",
+            "INVOCATION_ID": "test-invocation",
+        }, clear=True), patch.object(telemetry.socket, "gethostname", return_value="secompp"), \
+                patch.object(telemetry, "request_json") as request:
+            telemetry.create_deployment("test-token", "example", "server", "executed-sha")
+
+        payload = request.call_args.args[3]
+        self.assertEqual(payload["ref"], "executed-sha")
+        self.assertEqual(payload["payload"]["runner_hostname"], "secompp")
+        self.assertEqual(payload["payload"]["systemd_invocation_id"], "test-invocation")
+        self.assertRegex(payload["payload"]["wrapper_sha256"], r"^[0-9a-f]{64}$")
+
+    def test_wrapper_identity_survives_playbook_replacing_installed_file(self):
+        original_hash = telemetry.WRAPPER_SHA256
+        with patch("builtins.open", side_effect=FileNotFoundError), \
+                patch.object(telemetry, "request_json") as request:
+            telemetry.create_deployment("test-token", "example", "server", "executed-sha")
+        self.assertEqual(request.call_args.args[3]["payload"]["wrapper_sha256"], original_hash)
+
     def test_success_failure_and_wrapper_error_link_to_ara(self):
         for outcome, expected in [(0, "success"), (2, "failure"), (OSError("test"), "error")]:
             with self.subTest(outcome=outcome), patch.dict(os.environ, {
