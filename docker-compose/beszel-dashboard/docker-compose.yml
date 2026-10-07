@@ -2,7 +2,7 @@ services:
   beszel:
     image: henrygd/beszel
     container_name: beszel
-    restart: unless-stopped
+    restart: always
     volumes:
       - /home/shared/docker-data/beszel:/beszel_data
     labels:
@@ -21,7 +21,7 @@ services:
   beszel-agent:
     image: "henrygd/beszel-agent"
     container_name: "beszel-agent"
-    restart: unless-stopped
+    restart: always
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       # monitor other disks / partitions by mounting a folder in /extra-filesystems

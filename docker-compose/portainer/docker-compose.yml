@@ -2,7 +2,7 @@ services:
   portainer:
     image: portainer/portainer-ce:2.45.1
     container_name: portainer
-    restart: unless-stopped
+    restart: always
     command:
       - --http-enabled
       - --admin-password-file=/run/secrets/admin-password

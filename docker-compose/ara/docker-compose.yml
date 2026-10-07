@@ -2,7 +2,7 @@ services:
   ara:
     # Upstream fedora44-pypi image, ARA 1.8.0. Keep recorder version in sync.
     image: recordsansible/ara-api@sha256:9dfd6e18f474c2437081a0397310a264aa368b8364aea772c3b5b22bdd788cf5
-    restart: unless-stopped
+    restart: always
     # The host recorder owns the database. No host TCP port is published.
     user: "0:0"
     environment:
@@ -15,7 +15,13 @@ services:
     volumes:
       - /home/shared/docker-data/ara:/home/shared/docker-data/ara
     healthcheck:
-      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthcheck/', timeout=5)"]
+      test:
+        [
+          "CMD",
+          "python3",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthcheck/', timeout=5)",
+        ]
       start_period: 60s
       interval: 30s
       timeout: 10s
