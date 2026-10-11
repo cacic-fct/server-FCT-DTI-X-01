@@ -35,6 +35,32 @@
   notify: Restart ansible-pull timer
   when: ansible_pull_deployment_telemetry_enabled | bool
 
+- name: Configure optional repository health telemetry
+  ignore_unreachable: true
+  when:
+    - ansible_pull_deployment_telemetry_enabled | bool
+    - ansible_pull_repository_health_enabled | bool
+  block:
+    - name: Install repository health reporter
+      ansible.builtin.copy:
+        src: repository-deployment-health.py
+        dest: "{{ ansible_pull_deployment_telemetry_wrapper_path | dirname }}/repository-deployment-health.py"
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Install explicit repository health mapping
+      ansible.builtin.template:
+        src: repository-health.json.j2
+        dest: "{{ ansible_pull_repository_health_config_path }}"
+        owner: root
+        group: root
+        mode: "0644"
+  rescue:
+    - name: Warn without interrupting deployment when health telemetry setup fails
+      ansible.builtin.debug:
+        msg: Repository health telemetry setup failed; continuing deployment without new telemetry configuration.
+
 - name: Install ansible-pull service
   ansible.builtin.template:
     src: ansible-pull-fct-dti-x-01.service.j2

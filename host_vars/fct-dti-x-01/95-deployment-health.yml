@@ -1,0 +1,50 @@
+---
+ansible_pull_repository_health_enabled: true
+ansible_pull_repository_health_runner_hostname: secompp
+
+ansible_pull_repository_health_repositories:
+  - repository: cacic-fct/account-manager
+    directory: cacic-account-manager
+    project: cacic-account
+    revision_service: cacic-account-manager-backend
+    services:
+      cacic-account-manager-backend: ghcr.io/cacic-fct/account-manager/account-backend
+      cacic-account-manager-frontend: ghcr.io/cacic-fct/account-manager/account-frontend
+    dependencies: [cacic-db, redis]
+
+  - repository: cacic-fct/voto
+    directory: cacic-voto
+    project: cacic-voto
+    revision_service: cacic-voto-backend
+    services:
+      cacic-voto-backend: ghcr.io/cacic-fct/voto/backend
+      cacic-voto-frontend: ghcr.io/cacic-fct/voto/frontend
+      cacic-voto-migrations: ghcr.io/cacic-fct/voto/backend
+    dependencies: [voto-db, voto-redis]
+    completed_services: [cacic-voto-migrations]
+
+  - repository: cacic-fct/event-manager
+    directory: cacic-event-manager
+    project: event-manager
+    revision_service: events-backend
+    services:
+      events-backend: ghcr.io/cacic-fct/event-manager/backend
+      admin: ghcr.io/cacic-fct/event-manager/admin
+      public: ghcr.io/cacic-fct/event-manager/public
+    dependencies: [events-db, events-redis]
+
+  - repository: cacic-fct/email-templates
+    directory: cacic-email-templates
+    project: cacic-email-templates
+    revision_service: email-templates
+    services:
+      email-templates: ghcr.io/cacic-fct/email-templates
+    dependencies: []
+
+  - repository: cacic-fct/error-pages
+    directory: cacic-error-pages
+    project: cacic-error-pages
+    revision_service: errorpages
+    services:
+      errorpages: ghcr.io/cacic-fct/error-pages
+    dependencies: []

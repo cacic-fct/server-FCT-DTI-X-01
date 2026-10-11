@@ -5,6 +5,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from unittest.mock import patch
 from urllib.parse import parse_qs, urlparse
@@ -166,6 +167,36 @@ print('ARA callback records failure details, suppresses secrets, and denies web 
 """], env={**environment, "ARA_WRITE_LOGIN_REQUIRED": "true"},
                 capture_output=True, text=True, timeout=30)
             self.assertEqual(check.returncode, 0, check.stdout + check.stderr)
+            # Resolve a real recorded entry with the read-only production lookup.
+            health_spec = importlib.util.spec_from_file_location(
+                "health", ROOT / "roles/ansible_pull/files/repository-deployment-health.py"
+            )
+            health = importlib.util.module_from_spec(health_spec)
+            health_spec.loader.exec_module(health)
+            run_label = "ansible-pull-" + "a" * 32
+            rename = subprocess.run([sys.executable, "-c", """
+import os, sys
+os.environ['DJANGO_SETTINGS_MODULE'] = 'ara.server.settings'
+import django
+django.setup()
+from ara.api.models import Label
+Label.objects.filter(name='test-run').update(name=sys.argv[1])
+""", run_label], env=environment, capture_output=True, text=True, timeout=30)
+            self.assertEqual(rename.returncode, 0, rename.stdout + rename.stderr)
+            reporter = health.Reporter.__new__(health.Reporter)
+            reporter.config = {}
+            reporter.identity = {}
+            reporter.deadline = time.monotonic() + 180
+            with patch.dict(os.environ, {
+                **environment,
+                "ANSIBLE_PULL_ARA_VENV": str(Path(sys.executable).parent.parent),
+                "GITHUB_DEPLOYMENT_ARA_RUN_LABEL": run_label,
+            }, clear=True):
+                self.assertRegex(reporter.ara_report_url(), r"^https://ansible\.cacic\.com\.br/playbooks/[0-9]+\.html$")
+                self.assertEqual(reporter.identity["ara_run_label"], run_label)
+                os.environ["GITHUB_DEPLOYMENT_ARA_RUN_LABEL"] = "ansible-pull-" + "b" * 32
+                with self.assertRaises(ValueError):
+                    reporter.ara_report_url()
 
 
 if __name__ == "__main__":

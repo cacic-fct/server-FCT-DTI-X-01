@@ -21,6 +21,26 @@
   loop_control:
     label: "{{ docker_compose_root }}/{{ item.item }}"
 
+- name: Hand off failed validation projects without blocking deployment telemetry
+  ansible.builtin.copy:
+    content: >-
+      {{ {
+        'run_id': lookup('ansible.builtin.env', 'GITHUB_DEPLOYMENT_RUN_ID'),
+        'phase': 'validation',
+        'projects': compose_project_config_validation.results | selectattr('rc', 'ne', 0) | map(attribute='item') | list,
+        'failed_projects': compose_project_config_validation.results | selectattr('rc', 'ne', 0) | map(attribute='item') | list
+      } | to_json }}
+    dest: "{{ lookup('ansible.builtin.env', 'GITHUB_DEPLOYMENT_RESULTS_PATH') }}"
+    mode: "0600"
+  when:
+    - not ansible_check_mode
+    - compose_project_config_validation.results | selectattr('rc', 'ne', 0) | list | length > 0
+    - lookup('ansible.builtin.env', 'GITHUB_DEPLOYMENT_RUN_ID') | length > 0
+    - lookup('ansible.builtin.env', 'GITHUB_DEPLOYMENT_RESULTS_PATH') | length > 0
+  failed_when: false
+  changed_when: false
+  ignore_unreachable: true
+
 - name: Fail when compose project validation fails
   ansible.builtin.fail:
     msg: >-

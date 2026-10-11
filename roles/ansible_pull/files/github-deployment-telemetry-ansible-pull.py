@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import hashlib
+import importlib.util
 import json
 import os
 import re
@@ -7,6 +8,7 @@ import shlex
 import socket
 import subprocess
 import sys
+from types import SimpleNamespace
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -51,7 +53,7 @@ def repo_owner_name(repo_url):
     return match.group("owner"), match.group("repo")
 
 
-def request_json(method, path, token, payload=None):
+def request_json(method, path, token, payload=None, timeout=30):
     headers = {
         "Accept": "application/vnd.github+json",
         "Authorization": f"Bearer {token}",
@@ -70,7 +72,7 @@ def request_json(method, path, token, payload=None):
         method=method,
     )
     try:
-        with urllib.request.urlopen(request, timeout=30) as response:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
             return json.loads(response.read().decode("utf-8"))
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode("utf-8", errors="replace")
@@ -81,7 +83,7 @@ def request_json(method, path, token, payload=None):
         raise RuntimeError(f"GitHub API {method} {path} failed: {exc.reason}") from exc
 
 
-def github_token():
+def github_token(repo_url=None, timeout=180):
     helper = env("GITHUB_DEPLOYMENT_TOKEN_HELPER")
     private_key = env("GITHUB_DEPLOYMENT_APP_PRIVATE_KEY")
     if not helper or not private_key:
@@ -101,7 +103,7 @@ def github_token():
     if installation_id:
         argv += ["--installation-id", installation_id]
     else:
-        argv += ["--repo-url", env("GITHUB_DEPLOYMENT_REPO", env("ANSIBLE_PULL_REPO"))]
+        argv += ["--repo-url", repo_url or env("GITHUB_DEPLOYMENT_REPO", env("ANSIBLE_PULL_REPO"))]
 
     argv += ["--private-key", private_key]
 
@@ -111,6 +113,7 @@ def github_token():
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
+        timeout=timeout,
     )
     return result.stdout.strip()
 
@@ -178,6 +181,7 @@ def ansible_pull_argv():
 
 def configure_ara():
     """Enable the offline recorder only after its repository-driven bootstrap."""
+    os.environ.pop("GITHUB_DEPLOYMENT_ARA_RUN_LABEL", None)
     if not enabled(env("ANSIBLE_PULL_ARA_ENABLED", "false")):
         return
 
@@ -185,7 +189,7 @@ def configure_ara():
     try:
         result = subprocess.run(
             [f"{venv}/bin/python", "-m", "ara.setup.callback_plugins"],
-            check=True, capture_output=True, text=True, timeout=30,
+            check=True, capture_output=True, text=True, timeout=180,
         )
         callback_path = result.stdout.strip()
         if not callback_path or not os.path.isfile(f"{venv}/bin/ansible-pull"):
@@ -195,11 +199,13 @@ def configure_ara():
         return
 
     os.environ["ANSIBLE_PULL_EXECUTABLE"] = f"{venv}/bin/ansible-pull"
+    os.environ["ANSIBLE_PULL_ARA_VENV"] = venv
     previous_paths = env("ANSIBLE_CALLBACK_PLUGINS")
     os.environ["ANSIBLE_CALLBACK_PLUGINS"] = os.pathsep.join(
         path for path in (callback_path, previous_paths) if path
     )
     run_label = f"ansible-pull-{uuid.uuid4().hex}"
+    os.environ["GITHUB_DEPLOYMENT_ARA_RUN_LABEL"] = run_label
     os.environ["ARA_DEFAULT_LABELS"] = ",".join(
         label for label in (env("ARA_DEFAULT_LABELS"), run_label) if label
     )
@@ -274,11 +280,14 @@ def run_ansible_pull():
     print(f"Running ansible-pull: {shlex.join(argv)}", file=sys.stderr, flush=True)
     return_code = subprocess.run(argv).returncode
     if return_code != 0:
-        print_failure_diagnostics(return_code)
+        try:
+            print_failure_diagnostics(return_code)
+        except Exception:
+            warn("failure diagnostics unavailable; preserving ansible-pull exit code")
     return return_code
 
 
-def checkout_revision():
+def checkout_revision(timeout=180):
     checkout = env("ANSIBLE_PULL_CHECKOUT")
     if not checkout:
         return None
@@ -289,6 +298,7 @@ def checkout_revision():
         stderr=subprocess.DEVNULL,
         text=True,
         check=False,
+        timeout=timeout,
     )
     if result.returncode != 0:
         return None
@@ -318,40 +328,75 @@ def report_deployment(revision, state, description):
         warn(f"could not report deployment telemetry: {exc}")
 
 
+def configure_repository_health():
+    if not env("GITHUB_REPOSITORY_HEALTH_CONFIG"):
+        return None
+    try:
+        path = os.path.join(os.path.dirname(__file__), "repository-deployment-health.py")
+        spec = importlib.util.spec_from_file_location("repository_health", path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        api = SimpleNamespace(
+            WRAPPER_SHA256=WRAPPER_SHA256, warn=warn, checkout_revision=checkout_revision,
+            repo_owner_name=repo_owner_name, github_token=github_token, request_json=request_json,
+        )
+        return module.Reporter(api)
+    except Exception:
+        warn("repository health initialization unavailable; deployment continues")
+        return None
+
+
+def report_server_result(state, description):
+    try:
+        revision = checkout_revision()
+        if revision:
+            report_deployment(revision, state, description)
+        else:
+            warn("no checkout revision available; skipping server deployment telemetry")
+    except Exception:
+        warn("server deployment telemetry unavailable; preserving ansible-pull outcome")
+
+
 def main():
-    configure_ara()
+    try:
+        configure_ara()
+    except Exception:
+        warn("ARA setup unavailable; deployment continues")
     telemetry_enabled = enabled(env("GITHUB_DEPLOYMENT_TELEMETRY_ENABLED", "false"))
+    reporter = configure_repository_health() if telemetry_enabled else None
 
     try:
         return_code = run_ansible_pull()
     except Exception as exc:
-        current_revision = checkout_revision() if telemetry_enabled else None
-        if current_revision:
-            report_deployment(
-                current_revision,
-                "error",
-                f"ansible-pull wrapper errored: {exc}",
-            )
+        if telemetry_enabled:
+            report_server_result("error", f"ansible-pull wrapper errored: {exc}")
+        if reporter:
+            try:
+                reporter.close()
+            except Exception:
+                warn("repository health cleanup unavailable")
         raise
 
     if not telemetry_enabled:
         return return_code
 
-    current_revision = checkout_revision()
-    if not current_revision:
-        print(
-            "Skipping GitHub deployment telemetry: no checkout revision is available.",
-            file=sys.stderr,
-        )
-        return return_code
-
-    report_deployment(
-        current_revision,
+    report_server_result(
         "success" if return_code == 0 else "failure",
         "ansible-pull finished successfully"
         if return_code == 0
         else f"ansible-pull failed with exit code {return_code}",
     )
+
+    if reporter:
+        try:
+            reporter.report()
+        except Exception:
+            warn("repository health reporting unavailable; preserving ansible-pull outcome")
+        finally:
+            try:
+                reporter.close()
+            except Exception:
+                warn("repository health cleanup unavailable")
 
     return return_code
 

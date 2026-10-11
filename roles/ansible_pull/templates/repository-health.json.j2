@@ -1,0 +1,9 @@
+{{ {
+  'schema': 1,
+  'server_id': server_id,
+  'runner_hostname': ansible_pull_repository_health_runner_hostname,
+  'compose_root': docker_compose_root,
+  'timeout_seconds': ansible_pull_repository_health_timeout_seconds | int,
+  'operation_timeout_seconds': ansible_pull_repository_health_operation_timeout_seconds | int,
+  'repositories': ansible_pull_repository_health_repositories
+} | to_nice_json }}

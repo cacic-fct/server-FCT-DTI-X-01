@@ -10,6 +10,25 @@
     loop_var: compose_project
     label: "{{ compose_project }}"
 
+- name: Hand off this run's compose outcomes to repository health telemetry
+  ansible.builtin.copy:
+    content: >-
+      {{ {
+        'run_id': lookup('ansible.builtin.env', 'GITHUB_DEPLOYMENT_RUN_ID'),
+        'phase': 'apply',
+        'projects': compose_projects,
+        'failed_projects': compose_project_deployment_failures | map(attribute='project') | list
+      } | to_json }}
+    dest: "{{ lookup('ansible.builtin.env', 'GITHUB_DEPLOYMENT_RESULTS_PATH') }}"
+    mode: "0600"
+  when:
+    - not ansible_check_mode
+    - lookup('ansible.builtin.env', 'GITHUB_DEPLOYMENT_RUN_ID') | length > 0
+    - lookup('ansible.builtin.env', 'GITHUB_DEPLOYMENT_RESULTS_PATH') | length > 0
+  failed_when: false
+  ignore_unreachable: true
+  changed_when: false
+
 - name: Fail after all compose projects have been attempted
   ansible.builtin.fail:
     msg: >-

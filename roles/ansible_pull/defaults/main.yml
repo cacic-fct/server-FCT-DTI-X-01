@@ -1,5 +1,11 @@
 ---
 ansible_pull_deployment_telemetry_enabled: false
+ansible_pull_repository_health_enabled: false
+ansible_pull_repository_health_runner_hostname: ""
+ansible_pull_repository_health_repositories: []
+ansible_pull_repository_health_config_path: /etc/ansible-pull/repository-health.json
+ansible_pull_repository_health_timeout_seconds: 900
+ansible_pull_repository_health_operation_timeout_seconds: 180
 ansible_pull_verbosity: 2
 ansible_pull_show_diff: true
 ansible_pull_ara_enabled: false
