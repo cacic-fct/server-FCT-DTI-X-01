@@ -1,6 +1,6 @@
 ---
 - name: Validate compose projects
-  ansible.builtin.command: docker compose config --quiet
+  ansible.builtin.command: docker compose config --images
   args:
     chdir: "{{ docker_compose_root }}/{{ item }}"
   loop: "{{ compose_projects }}"
@@ -9,6 +9,7 @@
   register: compose_project_config_validation
   changed_when: false
   failed_when: false
+  check_mode: false
 
 - name: Print failed compose validation details
   ansible.builtin.debug:

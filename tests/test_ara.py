@@ -13,6 +13,7 @@ from urllib.parse import parse_qs, urlparse
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
 spec = importlib.util.spec_from_file_location(
     "telemetry", ROOT / "roles/ansible_pull/files/github-deployment-telemetry-ansible-pull.py"
 )

@@ -1,11 +1,19 @@
 #!/bin/sh
 set -eu
 
+export NETWORK_RETRY_ATTEMPTS={{ network_retry_attempts | quote }}
+export NETWORK_RETRY_DELAY_SECONDS={{ network_retry_delay_seconds | quote }}
+export NETWORK_RETRY_HTTP_BUDGET_SECONDS={{ network_retry_http_budget_seconds | quote }}
+
 case "${1:-}" in
   *Username*|*username*)
     printf '%s\n' 'x-access-token'
     ;;
   *Password*|*password*)
+    if [ -n "${GITHUB_APP_INSTALLATION_TOKEN:-}" ]; then
+      printf '%s\n' "$GITHUB_APP_INSTALLATION_TOKEN"
+      exit 0
+    fi
     exec {{ server_secrets_github_app_token_helper_path | quote }} \
 {% if server_secrets_github_app_id is defined and (server_secrets_github_app_id | string | length > 0) %}
       --app-id {{ server_secrets_github_app_id | quote }} \

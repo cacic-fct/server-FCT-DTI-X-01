@@ -1,0 +1,3 @@
+#!/bin/sh
+set -eu
+exec {{ network_retry_helper_path | quote }} bounded-command /usr/bin/git "$@"

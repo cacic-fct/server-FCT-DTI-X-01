@@ -19,6 +19,10 @@
   ansible.builtin.apt:
     name: python3-cryptography
     state: present
+  register: github_app_dependency
+  until: github_app_dependency is succeeded
+  retries: "{{ (network_retry_attempts | int) - 1 }}"
+  delay: "{{ network_retry_delay_seconds }}"
 
 - name: Create GitHub App secrets group
   ansible.builtin.group:
@@ -83,6 +87,14 @@
     mode: "0400"
   no_log: true
 
+- name: Install network retry support for the GitHub App helper
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/scripts/network_retry.py"
+    dest: "{{ server_secrets_github_app_token_helper_path | dirname }}/network_retry.py"
+    owner: root
+    group: root
+    mode: "0755"
+
 - name: Install GitHub App installation token helper
   ansible.builtin.copy:
     src: github-app-installation-token.py
@@ -98,59 +110,3 @@
     owner: root
     group: root
     mode: "0755"
-
-- name: Build GitHub App token helper arguments for GHCR
-  ansible.builtin.set_fact:
-    server_secrets_github_app_ghcr_token_argv: >-
-      {{
-        [server_secrets_github_app_token_helper_path]
-        + (
-          (
-            server_secrets_github_app_id is defined
-            and (server_secrets_github_app_id | string | length > 0)
-          )
-          | ternary(
-            ['--app-id', server_secrets_github_app_id | string],
-            ['--app-slug', server_secrets_github_app_slug | string]
-          )
-        )
-        + (
-          (
-            server_secrets_github_app_installation_id is defined
-            and (server_secrets_github_app_installation_id | string | length > 0)
-          )
-          | ternary(
-            ['--installation-id', server_secrets_github_app_installation_id | string],
-            ['--repo-url', server_secrets_repo_url | string]
-          )
-        )
-        + ['--private-key', server_secrets_github_app_private_key_path]
-      }}
-  no_log: true
-
-- name: Create GitHub App token for GHCR
-  ansible.builtin.command:
-    argv: "{{ server_secrets_github_app_ghcr_token_argv }}"
-  register: server_secrets_github_app_ghcr_token
-  changed_when: false
-  failed_when: false
-  become_user: "{{ server_secrets_github_app_user }}"
-  environment:
-    HOME: "{{ server_secrets_github_app_home }}"
-  no_log: true
-
-- name: Report GitHub App token helper failure
-  ansible.builtin.fail:
-    msg: >-
-      GitHub App token helper failed (exit code
-      {{ server_secrets_github_app_ghcr_token.rc | default('unknown') }}):
-      {{ server_secrets_github_app_ghcr_token.stderr | default('No diagnostic was returned.', true) }}
-  when: (server_secrets_github_app_ghcr_token.rc | default(1) | int) != 0
-
-- name: Authenticate Docker to GHCR with GitHub App token
-  community.docker.docker_login:
-    registry_url: ghcr.io
-    username: x-access-token
-    password: "{{ server_secrets_github_app_ghcr_token.stdout }}"
-    reauthorize: true
-  no_log: true

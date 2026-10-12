@@ -25,6 +25,10 @@
     force: true
     update: true
   loop: "{{ compose_external_repositories }}"
+  register: external_repository_update
+  until: external_repository_update is succeeded
+  retries: "{{ (network_retry_attempts | int) - 1 }}"
+  delay: "{{ network_retry_delay_seconds }}"
 
 - name: Apply shared permissions to external service repository roots
   ansible.builtin.file:

@@ -8,5 +8,11 @@
 - name: Load Docker service setup
   ansible.builtin.import_tasks: service.yml
 
+- name: Load Docker daemon configuration
+  ansible.builtin.import_tasks: daemon.yml
+
+- name: Apply Docker download limits before Compose pulls images
+  ansible.builtin.meta: flush_handlers
+
 - name: Load Docker maintenance setup
   ansible.builtin.import_tasks: maintenance.yml

@@ -1,0 +1,60 @@
+---
+- name: Refresh the shared GitHub App token when it is close to expiry
+  when: >-
+    server_secrets_github_app_installation_token is not defined or
+    ((server_secrets_github_app_installation_token.expires_at
+      | ansible.builtin.to_datetime('%Y-%m-%dT%H:%M:%SZ'))
+      - now(utc=true)).total_seconds() < 300
+  block:
+    - name: Build GitHub App token helper arguments
+      ansible.builtin.set_fact:
+        server_secrets_github_app_token_argv: >-
+          {{
+            [network_retry_helper_path, 'bounded-command',
+             server_secrets_github_app_token_helper_path, '--json']
+            + (
+              (server_secrets_github_app_id | default('') | string | length > 0)
+              | ternary(
+                ['--app-id', server_secrets_github_app_id | default('') | string],
+                ['--app-slug', server_secrets_github_app_slug | default('') | string]
+              )
+            )
+            + (
+              (server_secrets_github_app_installation_id | default('') | string | length > 0)
+              | ternary(
+                ['--installation-id', server_secrets_github_app_installation_id | default('') | string],
+                ['--repo-url', server_secrets_repo_url | string]
+              )
+            )
+            + ['--private-key', server_secrets_github_app_private_key_path]
+          }}
+      no_log: true
+
+    - name: Create a bounded GitHub App installation token
+      ansible.builtin.command:
+        argv: "{{ server_secrets_github_app_token_argv }}"
+      register: server_secrets_github_app_token_result
+      changed_when: false
+      failed_when: false
+      check_mode: false
+      become_user: "{{ server_secrets_github_app_user }}"
+      environment:
+        HOME: "{{ server_secrets_github_app_home }}"
+        NETWORK_RETRY_ATTEMPTS: "{{ network_retry_attempts }}"
+        NETWORK_RETRY_DELAY_SECONDS: "{{ network_retry_delay_seconds }}"
+        NETWORK_RETRY_HTTP_BUDGET_SECONDS: "{{ network_retry_http_budget_seconds }}"
+        NETWORK_RETRY_DEADLINE_MONOTONIC: "{{ github_app_token_deadline | default('') }}"
+      no_log: true
+
+    - name: Report GitHub App token helper failure
+      ansible.builtin.fail:
+        msg: >-
+          GitHub App token helper failed (exit code
+          {{ server_secrets_github_app_token_result.rc | default('unknown') }}):
+          {{ server_secrets_github_app_token_result.stderr | default('No diagnostic was returned.', true) }}
+      when: (server_secrets_github_app_token_result.rc | default(1) | int) != 0
+
+    - name: Keep the installation token and expiry for this playbook run
+      ansible.builtin.set_fact:
+        server_secrets_github_app_installation_token: "{{ server_secrets_github_app_token_result.stdout | from_json }}"
+      no_log: true

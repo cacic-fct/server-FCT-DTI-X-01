@@ -1,4 +1,5 @@
 ---
+docker_max_concurrent_downloads: 3
 docker_system_prune_enabled: false
 docker_system_prune_max_wait_seconds: 7200
 docker_system_prune_retry_seconds: 60

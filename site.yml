@@ -2,6 +2,13 @@
 - name: Manage FCT-DTI-X-01
   hosts: secompp
   become: true
+  environment:
+    GIT_TERMINAL_PROMPT: "0"
+    GIT_HTTP_LOW_SPEED_LIMIT: "1"
+    GIT_HTTP_LOW_SPEED_TIME: "60"
+    NETWORK_RETRY_ATTEMPTS: "{{ network_retry_attempts }}"
+    NETWORK_RETRY_DELAY_SECONDS: "{{ network_retry_delay_seconds }}"
+    NETWORK_RETRY_HTTP_BUDGET_SECONDS: "{{ network_retry_http_budget_seconds }}"
   pre_tasks:
     - name: Load FCT-DTI-X-01 profile variables
       ansible.builtin.include_vars:
@@ -9,6 +16,15 @@
         extensions:
           - yml
           - yaml
+      tags:
+        - always
+    - name: Validate network retry limits
+      ansible.builtin.assert:
+        that:
+          - network_retry_attempts | int > 0
+          - network_retry_delay_seconds | int >= 0
+          - network_retry_http_budget_seconds | int > 0
+          - compose_parallel_limit | default(1) | int > 0
       tags:
         - always
   roles:

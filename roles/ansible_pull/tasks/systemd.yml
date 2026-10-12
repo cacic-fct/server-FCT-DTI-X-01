@@ -16,10 +16,43 @@
       token helper, app id/slug, private key, repository, and environment.
   when: ansible_pull_deployment_telemetry_enabled | bool
 
+- name: Ensure network retry helper directory exists
+  ansible.builtin.file:
+    path: "{{ network_retry_helper_path | dirname }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install isolated network retry runner
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/scripts/network_retry.py"
+    dest: "{{ network_retry_helper_path }}"
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install the Git executable wrapper with a shared retry deadline
+  ansible.builtin.template:
+    src: network-git.j2
+    dest: "{{ network_retry_git_executable }}"
+    owner: root
+    group: root
+    mode: "0755"
+
 - name: Ensure ansible-pull helper directory exists
   ansible.builtin.file:
     path: "{{ ansible_pull_deployment_telemetry_wrapper_path | dirname }}"
     state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  when: ansible_pull_deployment_telemetry_enabled | bool
+
+- name: Install network retry support beside the telemetry wrapper
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/scripts/network_retry.py"
+    dest: "{{ ansible_pull_deployment_telemetry_wrapper_path | dirname }}/network_retry.py"
     owner: root
     group: root
     mode: "0755"

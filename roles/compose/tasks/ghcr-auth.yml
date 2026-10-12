@@ -1,0 +1,24 @@
+---
+- name: Ensure the shared GitHub App token is still valid
+  ansible.builtin.include_tasks: github-app-token.yml
+
+- name: Authenticate Docker to GHCR when the installation token changes
+  when: >-
+    ghcr_authenticated_token_expiry | default('') !=
+    server_secrets_github_app_installation_token.expires_at
+  block:
+    - name: Authenticate Docker to GHCR with GitHub App token
+      community.docker.docker_login:
+        registry_url: ghcr.io
+        username: x-access-token
+        password: "{{ server_secrets_github_app_installation_token.token }}"
+        reauthorize: true
+      no_log: true
+      register: ghcr_login
+      until: ghcr_login is succeeded
+      retries: "{{ (network_retry_attempts | int) - 1 }}"
+      delay: "{{ network_retry_delay_seconds }}"
+
+    - name: Remember which token has authenticated Docker to GHCR
+      ansible.builtin.set_fact:
+        ghcr_authenticated_token_expiry: "{{ server_secrets_github_app_installation_token.expires_at }}"

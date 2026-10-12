@@ -4,6 +4,10 @@
     name: "{{ server_base_packages }}"
     state: present
     update_cache: true
+  register: base_package_install
+  until: base_package_install is succeeded
+  retries: "{{ (network_retry_attempts | int) - 1 }}"
+  delay: "{{ network_retry_delay_seconds }}"
 
 - name: Check optional apt package availability
   ansible.builtin.command: "apt-cache policy {{ item }}"
@@ -18,3 +22,7 @@
     state: present
   loop: "{{ optional_package_policy.results }}"
   when: "'Candidate: (none)' not in item.stdout"
+  register: optional_package_install
+  until: optional_package_install is succeeded
+  retries: "{{ (network_retry_attempts | int) - 1 }}"
+  delay: "{{ network_retry_delay_seconds }}"

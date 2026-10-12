@@ -1,0 +1,10 @@
+---
+# Ten attempts tolerate several minutes of connectivity loss without hiding a
+# permanent failure or replaying container/migration work.
+network_retry_attempts: 10
+network_retry_delay_seconds: 30
+network_retry_helper_path: /usr/local/libexec/ansible-pull/network_retry.py
+network_retry_git_executable: /usr/local/libexec/ansible-pull/network-git
+network_retry_http_budget_seconds: 360
+# These failures cannot recover by replaying the same Git operation.
+network_retry_git_terminal_error_pattern: '(?i)Network operation time budget exhausted|Authentication failed|Repository not found|Remote branch .* not found|Permission denied \(publickey\)'

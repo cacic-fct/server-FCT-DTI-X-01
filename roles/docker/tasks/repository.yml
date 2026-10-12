@@ -10,11 +10,15 @@
 - name: Install Docker apt key
   ansible.builtin.get_url:
     url: https://download.docker.com/linux/debian/gpg
+    timeout: 30
     dest: /etc/apt/keyrings/docker.asc
     owner: root
     group: root
     mode: "0644"
   register: docker_apt_key
+  until: docker_apt_key is succeeded
+  retries: "{{ (network_retry_attempts | int) - 1 }}"
+  delay: "{{ network_retry_delay_seconds }}"
 
 - name: Configure Docker apt repository
   ansible.builtin.deb822_repository:
@@ -33,3 +37,7 @@
   ansible.builtin.apt:
     update_cache: true
   when: docker_apt_key.changed or docker_apt_repository.changed
+  register: docker_apt_cache
+  until: docker_apt_cache is succeeded
+  retries: "{{ (network_retry_attempts | int) - 1 }}"
+  delay: "{{ network_retry_delay_seconds }}"

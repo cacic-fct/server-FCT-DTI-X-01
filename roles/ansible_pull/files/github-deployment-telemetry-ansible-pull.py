@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import hashlib
+import http.client
 import importlib.util
 import json
 import os
@@ -13,6 +14,8 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import uuid
+
+from network_retry import TRANSIENT_HTTP_STATUSES, failed_before_request, retry_http
 
 
 GITHUB_API = "https://api.github.com"
@@ -53,7 +56,7 @@ def repo_owner_name(repo_url):
     return match.group("owner"), match.group("repo")
 
 
-def request_json(method, path, token, payload=None, timeout=30):
+def request_json(method, path, token, payload=None, timeout=None):
     headers = {
         "Accept": "application/vnd.github+json",
         "Authorization": f"Bearer {token}",
@@ -71,19 +74,55 @@ def request_json(method, path, token, payload=None, timeout=30):
         headers=headers,
         method=method,
     )
+    if timeout is None:
+        timeout = env_int("NETWORK_RETRY_HTTP_BUDGET_SECONDS", 360)
+
+    creating_deployment = method == "POST" and path.endswith("/deployments")
+    uncertain_creation = False
+
+    def send(remaining):
+        nonlocal uncertain_creation
+        if uncertain_creation:
+            # A lost POST response may mean the deployment already exists.
+            # Reconcile by this invocation's exact payload; never POST again
+            # after an ambiguous result, even if the listing is still empty.
+            query = urllib.parse.urlencode({
+                "environment": payload["environment"], "sha": payload["ref"], "per_page": 100,
+            })
+            lookup = urllib.request.Request(
+                f"{GITHUB_API}{path}?{query}", headers=headers, method="GET",
+            )
+            with urllib.request.urlopen(lookup, timeout=remaining) as response:
+                deployments = json.loads(response.read().decode("utf-8"))
+            for deployment in deployments:
+                if deployment.get("payload") == payload.get("payload"):
+                    return deployment
+            raise urllib.error.URLError("Awaiting confirmation of deployment creation")
+        try:
+            with urllib.request.urlopen(request, timeout=remaining) as response:
+                return json.loads(response.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            # A rate-limit rejection did not create a deployment. Retry that
+            # POST after Retry-After; reconcile only potentially accepted writes.
+            if creating_deployment and exc.code in TRANSIENT_HTTP_STATUSES - {429}:
+                uncertain_creation = True
+            raise
+        except (urllib.error.URLError, TimeoutError, ConnectionError, http.client.HTTPException) as exc:
+            if creating_deployment and not failed_before_request(exc):
+                uncertain_creation = True
+            raise
+
     try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:
-            return json.loads(response.read().decode("utf-8"))
+        return retry_http(send, timeout=timeout)
     except urllib.error.HTTPError as exc:
-        detail = exc.read().decode("utf-8", errors="replace")
-        raise RuntimeError(
-            f"GitHub API {method} {path} failed: {exc.code} {exc.reason}: {detail[:500]}"
-        ) from exc
-    except urllib.error.URLError as exc:
-        raise RuntimeError(f"GitHub API {method} {path} failed: {exc.reason}") from exc
+        raise RuntimeError(f"GitHub API {method} failed: HTTP {exc.code}") from exc
+    except (urllib.error.URLError, TimeoutError, ConnectionError) as exc:
+        raise RuntimeError(f"GitHub API {method} failed after network retry budget") from exc
 
 
-def github_token(repo_url=None, timeout=180):
+def github_token(repo_url=None, timeout=None):
+    if timeout is None:
+        timeout = env_int("NETWORK_RETRY_HTTP_BUDGET_SECONDS", 360) + 30
     helper = env("GITHUB_DEPLOYMENT_TOKEN_HELPER")
     private_key = env("GITHUB_DEPLOYMENT_APP_PRIVATE_KEY")
     if not helper or not private_key:
@@ -127,6 +166,7 @@ def create_deployment(token, owner, repo, revision):
         "auto_merge": False,
         "required_contexts": [],
         "payload": {
+            "report_id": uuid.uuid4().hex,
             "runner_hostname": socket.gethostname(),
             "wrapper_sha256": WRAPPER_SHA256,
             "systemd_invocation_id": env("INVOCATION_ID"),
@@ -278,7 +318,8 @@ def print_failure_diagnostics(return_code):
 def run_ansible_pull():
     argv = ansible_pull_argv()
     print(f"Running ansible-pull: {shlex.join(argv)}", file=sys.stderr, flush=True)
-    return_code = subprocess.run(argv).returncode
+    runner = env("NETWORK_RETRY_HELPER", "/usr/local/libexec/ansible-pull/network_retry.py")
+    return_code = subprocess.run([runner, "pull", *argv]).returncode
     if return_code != 0:
         try:
             print_failure_diagnostics(return_code)

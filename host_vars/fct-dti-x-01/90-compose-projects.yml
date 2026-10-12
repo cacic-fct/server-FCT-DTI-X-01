@@ -31,6 +31,8 @@ compose_projects:
   - wud-updater
 
 compose_pull_before_up: true
+# One image at a time avoids competing HDD writes and decompression on two cores.
+compose_parallel_limit: 1
 compose_remove_orphans: true
 
 compose_public_paths_moved_to_secrets:

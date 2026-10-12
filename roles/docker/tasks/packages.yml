@@ -8,3 +8,7 @@
       - docker-ce-cli
       - docker-compose-plugin
     state: present
+  register: docker_package_install
+  until: docker_package_install is succeeded
+  retries: "{{ (network_retry_attempts | int) - 1 }}"
+  delay: "{{ network_retry_delay_seconds }}"

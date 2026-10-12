@@ -7,6 +7,10 @@
   ansible.builtin.apt:
     name: python3-venv
     state: present
+  register: ara_venv_support
+  until: ara_venv_support is succeeded
+  retries: "{{ (network_retry_attempts | int) - 1 }}"
+  delay: "{{ network_retry_delay_seconds }}"
 
 - name: Create private ARA database directory
   ansible.builtin.file:
@@ -27,6 +31,11 @@
 
 # ansible-pull locates ansible and ansible-playbook beside its own executable.
 # These entry points use the distribution's Ansible without replacing it.
+  register: ara_package_install
+  until: ara_package_install is succeeded
+  retries: "{{ (network_retry_attempts | int) - 1 }}"
+  delay: "{{ network_retry_delay_seconds }}"
+
 - name: Install Ansible entry points using the ARA interpreter
   ansible.builtin.template:
     src: ara-ansible-cli.j2

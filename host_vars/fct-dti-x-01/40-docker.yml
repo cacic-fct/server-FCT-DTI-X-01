@@ -1,6 +1,9 @@
 ---
 docker_apt_arch: "{{ 'amd64' if ansible_architecture == 'x86_64' else ansible_architecture }}"
 
+# Keep layer downloads from competing for the server's HDD and two CPU cores.
+docker_max_concurrent_downloads: 1
+
 docker_system_prune_enabled: true
 docker_system_prune_max_wait_seconds: 7200
 docker_system_prune_retry_seconds: 60

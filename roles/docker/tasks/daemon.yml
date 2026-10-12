@@ -1,0 +1,45 @@
+---
+- name: Validate Docker download concurrency
+  ansible.builtin.assert:
+    that: docker_max_concurrent_downloads | int > 0
+
+- name: Ensure Docker configuration directory exists
+  ansible.builtin.file:
+    path: /etc/docker
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Check existing Docker daemon configuration
+  ansible.builtin.stat:
+    path: /etc/docker/daemon.json
+  register: docker_daemon_config_stat
+
+- name: Read existing Docker daemon configuration
+  ansible.builtin.slurp:
+    src: /etc/docker/daemon.json
+  register: docker_daemon_config_source
+  when: docker_daemon_config_stat.stat.exists
+  no_log: true
+
+- name: Merge the download limit with existing Docker daemon settings
+  ansible.builtin.set_fact:
+    docker_daemon_configuration: >-
+      {{
+        (docker_daemon_config_source.content | b64decode | from_json
+          if docker_daemon_config_stat.stat.exists else {})
+        | combine({'max-concurrent-downloads': docker_max_concurrent_downloads | int})
+      }}
+  no_log: true
+
+- name: Install validated Docker daemon configuration
+  ansible.builtin.copy:
+    content: "{{ docker_daemon_configuration | to_nice_json }}\n"
+    dest: /etc/docker/daemon.json
+    owner: root
+    group: root
+    mode: "{{ docker_daemon_config_stat.stat.mode | default('0644') }}"
+    validate: /usr/bin/dockerd --validate --config-file %s
+  no_log: true
+  notify: Restart Docker

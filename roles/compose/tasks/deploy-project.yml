@@ -1,14 +1,35 @@
 ---
 - name: Deploy compose project
+  environment:
+    COMPOSE_PARALLEL_LIMIT: "{{ compose_parallel_limit | default(1) }}"
   block:
     - name: Announce compose project deployment
       ansible.builtin.debug:
         msg: "Running docker compose up for services in {{ docker_compose_root }}/{{ compose_project }}"
 
+    - name: Refresh GitHub App authentication before pulling project images
+      ansible.builtin.include_tasks: ghcr-auth.yml
+      when:
+        - server_secrets_auth_method | default('github_app') == 'github_app'
+        - >-
+          compose_project_config_validation.results
+          | selectattr('item', 'equalto', compose_project)
+          | map(attribute='stdout_lines') | flatten
+          | select('match', '^ghcr[.]io/') | list | length > 0
+
+    - name: Pull compose project images before changing containers
+      community.docker.docker_compose_v2_pull:
+        project_src: "{{ docker_compose_root }}/{{ compose_project }}"
+        policy: "{{ 'always' if compose_pull_before_up else 'missing' }}"
+      register: compose_project_pull
+      until: compose_project_pull is succeeded
+      retries: "{{ (network_retry_attempts | int) - 1 }}"
+      delay: "{{ network_retry_delay_seconds }}"
+
     - name: Apply compose project
       community.docker.docker_compose_v2:
         project_src: "{{ docker_compose_root }}/{{ compose_project }}"
-        pull: "{{ 'always' if compose_pull_before_up else 'missing' }}"
+        pull: never
         remove_orphans: "{{ compose_remove_orphans | default(false) }}"
         state: present
       register: compose_project_apply
@@ -62,7 +83,7 @@
         - name: Retry compose project deployment after stale network recovery
           community.docker.docker_compose_v2:
             project_src: "{{ docker_compose_root }}/{{ compose_project }}"
-            pull: "{{ 'always' if compose_pull_before_up else 'missing' }}"
+            pull: never
             remove_orphans: "{{ compose_remove_orphans | default(false) }}"
             state: present
           register: compose_project_apply
