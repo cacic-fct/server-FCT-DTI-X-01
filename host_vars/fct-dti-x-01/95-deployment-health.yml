@@ -10,7 +10,9 @@ ansible_pull_repository_health_repositories:
     services:
       cacic-account-manager-backend: ghcr.io/cacic-fct/account-manager/account-backend
       cacic-account-manager-frontend: ghcr.io/cacic-fct/account-manager/account-frontend
+      cacic-account-manager-backend-migrate: ghcr.io/cacic-fct/account-manager/account-backend
     dependencies: [cacic-db, redis]
+    completed_services: [cacic-account-manager-backend-migrate]
 
   - repository: cacic-fct/voto
     directory: cacic-voto
@@ -31,7 +33,9 @@ ansible_pull_repository_health_repositories:
       events-backend: ghcr.io/cacic-fct/event-manager/backend
       admin: ghcr.io/cacic-fct/event-manager/admin
       public: ghcr.io/cacic-fct/event-manager/public
+      events-backend-migrate: ghcr.io/cacic-fct/event-manager/backend
     dependencies: [events-db, events-redis]
+    completed_services: [events-backend-migrate]
 
   - repository: cacic-fct/email-templates
     directory: cacic-email-templates

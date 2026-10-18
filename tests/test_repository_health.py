@@ -435,6 +435,17 @@ class MappingValidation(unittest.TestCase):
             )
             self.assertEqual(entry["project"], compose.get("name", entry["directory"]))
             self.assertTrue(set(entry["dependencies"]) <= set(compose["services"]))
+            completed_dependencies = {
+                dependency
+                for service in entry["services"]
+                for dependency, options in (
+                    compose["services"][service].get("depends_on", {}).items()
+                )
+                if isinstance(options, dict)
+                and options.get("condition") == "service_completed_successfully"
+            }
+            # Jobs that gate application startup must also gate deployment health.
+            self.assertEqual(set(entry.get("completed_services", [])), completed_dependencies)
             for service, image in entry["services"].items():
                 self.assertEqual(
                     health.image_repository(compose["services"][service]["image"]), image
