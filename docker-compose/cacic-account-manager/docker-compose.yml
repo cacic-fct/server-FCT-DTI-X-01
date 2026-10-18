@@ -106,6 +106,20 @@ services:
         condition: service_healthy
       cacic-account-manager-backend-migrate:
         condition: service_completed_successfully
+    healthcheck:
+      test:
+        - CMD
+        - curl
+        - --fail-with-body
+        - --silent
+        - --show-error
+        - --max-time
+        - "4"
+        - http://127.0.0.1:3000/api/health/live
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     restart: always
     networks:
       - postgres_network
