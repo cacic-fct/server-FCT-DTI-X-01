@@ -5,8 +5,15 @@ services:
     restart: "always"
 
     networks:
-      - traefik
-      - prometheus
+      traefik:
+        aliases:
+          - sso.cacic.com.br
+          - auth.cacic.com.br
+          - typesense.cacic.com.br
+          - notifications.cacic.com.br
+          - glitchtip.cacic.com.br
+          - s3.cacic.com.br
+      prometheus: {}
 
     env_file:
       - .env
