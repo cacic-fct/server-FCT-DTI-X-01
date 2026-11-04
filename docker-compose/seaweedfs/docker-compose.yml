@@ -114,8 +114,6 @@ services:
       - /home/shared/docker-data/seaweedfs/data/s3:/data
       - ./etc/seaweed/s3_config.json:/etc/seaweed/s3_config.json:ro
       - ./etc/seaweed/security.toml:/etc/seaweed/security.toml:ro
-    ports:
-      - 8333:8333
     command: >
       -v=4
       s3
