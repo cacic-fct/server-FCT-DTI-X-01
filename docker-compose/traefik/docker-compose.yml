@@ -13,6 +13,7 @@ services:
           - notifications.cacic.com.br
           - glitchtip.cacic.com.br
           - s3.cacic.com.br
+          - unleash.cacic.com.br
       prometheus: {}
 
     env_file:
