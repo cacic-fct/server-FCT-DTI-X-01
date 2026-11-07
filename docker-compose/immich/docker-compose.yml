@@ -24,15 +24,22 @@ services:
       - redis
       - database
     restart: unless-stopped
+    stop_grace_period: 1m
+    healthcheck:
+      disable: false
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
+      - "traefik.docker.allownonrunning=true"
       - "traefik.http.routers.immich.entryPoints=websecure, web"
       - "traefik.http.routers.immich.rule=Host(`fotos.cacic.com.br`)"
       - "traefik.http.routers.immich.tls=true"
       - "traefik.http.routers.immich.service=immich-svc"
       - "traefik.http.services.immich-svc.loadbalancer.server.port=2283"
-      - "traefik.http.routers.immich.middlewares=errorpages-mw@docker, ipwhitelist-mw@file"
+      - "traefik.http.routers.immich.middlewares=ipwhitelist-mw@file, errorpages-mw@docker, immich-sablier@file"
+      - "sablier.enable=true"
+      - "sablier.group=immich"
+      - "sablier.ready-after=30s"
     networks:
       - traefik
       - prometheus

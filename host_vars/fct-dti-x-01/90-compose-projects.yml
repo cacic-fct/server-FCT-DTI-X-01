@@ -5,6 +5,7 @@ compose_projects:
   - evcomp
   - prometheus
   - prometheus-node
+  - sablier
   - traefik
   - portainer
   - fake-smtp

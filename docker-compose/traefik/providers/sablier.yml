@@ -1,0 +1,25 @@
+http:
+  middlewares:
+    immich-sablier:
+      plugin:
+        sablier:
+          sablierUrl: http://sablier:10000
+          group: immich
+          sessionDuration: 12h
+          keepAliveInterval: 30s
+          failOpen: true
+          dialTimeout: 2s
+          blocking:
+            timeout: 3m
+
+    grafana-sablier:
+      plugin:
+        sablier:
+          sablierUrl: http://sablier:10000
+          group: grafana
+          sessionDuration: 15m
+          keepAliveInterval: 30s
+          failOpen: true
+          dialTimeout: 2s
+          blocking:
+            timeout: 3m

@@ -3,6 +3,7 @@ services:
     image: grafana/grafana-oss
     container_name: grafana
     restart: unless-stopped
+    stop_grace_period: 1m
     user: 0:0
     volumes:
       - /home/shared/docker-data/grafana:/var/lib/grafana
@@ -14,6 +15,11 @@ services:
       - "traefik.http.routers.grafana.tls=true"
       - "traefik.http.services.grafana-svc.loadbalancer.server.port=3000"
       - "traefik.http.routers.grafana.service=grafana-svc"
+      - "traefik.docker.allownonrunning=true"
+      - "traefik.http.routers.grafana.middlewares=grafana-sablier@file"
+      - "sablier.enable=true"
+      - "sablier.group=grafana"
+      - "sablier.ready-after=1m"
     networks:
       - traefik
       - prometheus
