@@ -36,6 +36,7 @@
 - name: Update apt cache after Docker repository changes
   ansible.builtin.apt:
     update_cache: true
+    lock_timeout: 600
   when: docker_apt_key.changed or docker_apt_repository.changed
   register: docker_apt_cache
   until: docker_apt_cache is succeeded

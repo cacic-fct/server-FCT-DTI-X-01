@@ -27,6 +27,14 @@
           - compose_parallel_limit | default(1) | int > 0
       tags:
         - always
+    - name: Recover interrupted dpkg configuration before apt operations
+      ansible.builtin.script: "{{ playbook_dir }}/scripts/apt-preflight.sh"
+      args:
+        executable: /bin/bash
+      register: apt_preflight
+      changed_when: "'Recovered incomplete dpkg setup.' in apt_preflight.stdout"
+      tags:
+        - always
   roles:
     - role: base
     - role: docker

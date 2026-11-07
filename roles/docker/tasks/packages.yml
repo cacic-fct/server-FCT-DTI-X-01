@@ -8,6 +8,7 @@
       - docker-ce-cli
       - docker-compose-plugin
     state: present
+    lock_timeout: 600
   register: docker_package_install
   until: docker_package_install is succeeded
   retries: "{{ (network_retry_attempts | int) - 1 }}"

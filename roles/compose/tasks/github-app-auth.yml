@@ -19,6 +19,7 @@
   ansible.builtin.apt:
     name: python3-cryptography
     state: present
+    lock_timeout: 600
   register: github_app_dependency
   until: github_app_dependency is succeeded
   retries: "{{ (network_retry_attempts | int) - 1 }}"

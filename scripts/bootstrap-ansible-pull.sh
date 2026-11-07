@@ -34,8 +34,12 @@ retry_bootstrap() {
   done
 }
 
-retry_bootstrap apt-get update --error-on=any
-retry_bootstrap apt-get install -y ansible ca-certificates git python3 python3-apt
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+"$script_dir/apt-preflight.sh"
+
+retry_bootstrap apt-get -o DPkg::Lock::Timeout=600 update --error-on=any
+retry_bootstrap apt-get -o DPkg::Lock::Timeout=600 install -y \
+  ansible ca-certificates git python3 python3-apt
 python3 "$retry_helper" command ansible-galaxy collection install community.docker
 
 install -d -m 0755 "$(dirname "$CHECKOUT")"

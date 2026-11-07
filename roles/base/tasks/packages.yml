@@ -4,6 +4,7 @@
     name: "{{ server_base_packages }}"
     state: present
     update_cache: true
+    lock_timeout: 600
   register: base_package_install
   until: base_package_install is succeeded
   retries: "{{ (network_retry_attempts | int) - 1 }}"
@@ -20,6 +21,7 @@
   ansible.builtin.apt:
     name: "{{ item.item }}"
     state: present
+    lock_timeout: 600
   loop: "{{ optional_package_policy.results }}"
   when: "'Candidate: (none)' not in item.stdout"
   register: optional_package_install
