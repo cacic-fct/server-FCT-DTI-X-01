@@ -39,7 +39,9 @@ services:
     #   - "8000:8000"
     env_file:
       - secrets.env
-    environment: *default-environment
+    environment:
+      <<: *default-environment
+      SERVER_ROLE: worker
     restart: unless-stopped
     volumes:
       - /home/shared/docker-data/glitchtip/uploads:/code/uploads
@@ -57,7 +59,7 @@ services:
       - "traefik.http.routers.glitchtip.middlewares=noindex@file"
   worker:
     image: glitchtip/glitchtip
-    command: ./bin/run-celery-with-beat.sh
+    command: ./bin/start.sh
     depends_on: *default-depends_on
     env_file:
       - secrets.env
