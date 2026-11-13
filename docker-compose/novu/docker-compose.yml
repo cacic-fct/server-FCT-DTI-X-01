@@ -107,11 +107,6 @@ services:
       retries: 3
       start_period: 40s
     labels:
-      - "wud.watch=true"
-      - "wud.watch.digest=true"
-      - "wud.tag.include=^\\d+\\.\\d+\\.\\d+$$"
-      - "wud.display.name=novu-api"
-      - "wud.link.template=https://github.com/novuhq/novu/releases/tag/v$${major}.$${minor}.$${patch}"
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
       - "traefik.http.routers.novu-api.entrypoints=web,websecure"
@@ -170,12 +165,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 20s
-    labels:
-      - "wud.watch=true"
-      - "wud.watch.digest=true"
-      - "wud.tag.include=^\\d+\\.\\d+\\.\\d+$$"
-      - "wud.display.name=novu-worker"
-      - "wud.link.template=https://github.com/novuhq/novu/releases/tag/v$${major}.$${minor}.$${patch}"
 
   ws:
     image: ghcr.io/novuhq/novu/ws:3.18.0
@@ -215,11 +204,6 @@ services:
       retries: 3
       start_period: 40s
     labels:
-      - "wud.watch=true"
-      - "wud.watch.digest=true"
-      - "wud.tag.include=^\\d+\\.\\d+\\.\\d+$$"
-      - "wud.display.name=novu-ws"
-      - "wud.link.template=https://github.com/novuhq/novu/releases/tag/v$${major}.$${minor}.$${patch}"
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
       - "traefik.http.routers.novu-ws.entrypoints=web,websecure"
@@ -259,11 +243,6 @@ services:
       retries: 3
       start_period: 20s
     labels:
-      - "wud.watch=true"
-      - "wud.watch.digest=true"
-      - "wud.tag.include=^\\d+\\.\\d+\\.\\d+$$"
-      - "wud.display.name=novu-dashboard"
-      - "wud.link.template=https://github.com/novuhq/novu/releases/tag/v$${major}.$${minor}.$${patch}"
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
       - "traefik.http.routers.novu-dashboard.entrypoints=web,websecure"

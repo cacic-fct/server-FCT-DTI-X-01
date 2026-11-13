@@ -2,7 +2,7 @@
 Description=Apply FCT-DTI-X-01 Ansible source of truth
 Documentation={{ server_docs_url }}
 Wants=network-online.target
-After=network-online.target
+After=network-online.target apt-daily.service apt-daily-upgrade.service
 
 [Service]
 Type=oneshot

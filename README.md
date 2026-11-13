@@ -11,11 +11,22 @@ Ele instala e mantém:
 - Configuração pública versionada;
 - Overlays e segredos vindos do repositório privado.
 
-Depois do bootstrap inicial, o próprio servidor reaplica este repositório automaticamente todos os dias às **04:00** pelo timer:
+### Agenda diária de manutenção
 
-```bash
-ansible-pull-fct-dti-x-01.timer
-```
+Os horários usam o fuso do servidor.
+
+| Horário | Tarefa | Configuração |
+| --- | --- | --- |
+| 00:30–00:45 | APT atualiza os índices de pacotes | `roles/base/files/apt-daily.override.conf` |
+| 01:30 | APT instala atualizações automáticas | `roles/base/files/apt-daily-upgrade.override.conf` |
+| 03:00 | Reinício do servidor, se exigido por uma atualização | `roles/base/templates/50unattended-upgrades-cacic.j2` |
+| 04:00 | `ansible-pull-fct-dti-x-01.timer` reaplica este repositório | `host_vars/fct-dti-x-01/10-ansible-pull.yml` |
+| Após o deploy | Limpeza de imagens Docker | `roles/docker/tasks/maintenance.yml` |
+
+Ao alterar um horário, confira esta tabela e atualize a linha correspondente.
+Após uma indisponibilidade, timers persistentes podem executar tarefas perdidas
+fora do horário habitual. Quando o systemd enfileira o deploy e os serviços
+periódicos do APT juntos, o deploy aguarda o APT.
 
 Ao terminar cada execução do serviço `ansible-pull`, o servidor executa
 `docker image prune -a -f`, mesmo se o deploy falhar. Isso remove imagens que

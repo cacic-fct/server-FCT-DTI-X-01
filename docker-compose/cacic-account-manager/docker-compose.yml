@@ -84,7 +84,6 @@ services:
     networks:
       - postgres_network
     labels:
-      - "wud.watch=false"
       - "traefik.enable=false"
 
   cacic-account-manager-backend:
@@ -128,12 +127,6 @@ services:
       - cacic-m2m-event-account
       - cacic-m2m-account-voto
     labels:
-      - "wud.watch=true"
-      - "wud.watch.digest=true"
-      - "wud.tag.include=^latest$$"
-      - "wud.trigger.docker.enabled=false"
-      - "wud.display.name=account-manager-backend"
-      - "wud.link.template=https://github.com/cacic-fct/account-manager/pkgs/container/account-manager%2Faccount-backend"
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
       - "traefik.http.routers.backend-le.entrypoints=web,websecure"
@@ -148,12 +141,6 @@ services:
     networks:
       - traefik
     labels:
-      - "wud.watch=true"
-      - "wud.watch.digest=true"
-      - "wud.tag.include=^latest$$"
-      - "wud.trigger.include=docker.accountmanager"
-      - "wud.display.name=account-manager-frontend"
-      - "wud.link.template=https://github.com/cacic-fct/account-manager/pkgs/container/account-manager%2Faccount-frontend"
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
 

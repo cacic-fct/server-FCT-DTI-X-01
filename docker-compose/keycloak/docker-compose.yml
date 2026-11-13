@@ -28,12 +28,6 @@ services:
       keycloak_postgres:
         condition: service_healthy
     labels:
-      - "wud.watch=true"
-      - "wud.watch.digest=true"
-      - "wud.tag.include=^\\d+\\.\\d+\\.\\d+$$"
-      - "wud.trigger.include=docker.keycloak"
-      - "wud.display.name=keycloak"
-      - "wud.link.template=https://github.com/keycloak/keycloak/releases/tag/$${major}.$${minor}.$${patch}"
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
       - "traefik.http.routers.keycloak.entryPoints=web, websecure"

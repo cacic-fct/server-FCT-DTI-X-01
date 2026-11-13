@@ -10,12 +10,6 @@ services:
       -ip.bind=0.0.0.0
       -metricsPort=9324
       -mdir=/data
-    labels:
-      - "wud.watch=true"
-      - "wud.watch.digest=true"
-      - "wud.tag.include=^latest$$"
-      - "wud.display.name=seaweedfs-master"
-      - "wud.link.template=https://github.com/seaweedfs/seaweedfs/pkgs/container/seaweedfs"
     networks:
       - default
 
@@ -33,12 +27,6 @@ services:
       -port=8080
       -metricsPort=9325
       -dir=/data
-    labels:
-      - "wud.watch=true"
-      - "wud.watch.digest=true"
-      - "wud.tag.include=^latest$$"
-      - "wud.display.name=seaweedfs-volume"
-      - "wud.link.template=https://github.com/seaweedfs/seaweedfs/pkgs/container/seaweedfs"
     networks:
       - default
 
@@ -58,12 +46,6 @@ services:
       -master="master:9333"
       -ip.bind=0.0.0.0
       -metricsPort=9326
-    labels:
-      - "wud.watch=true"
-      - "wud.watch.digest=true"
-      - "wud.tag.include=^latest$$"
-      - "wud.display.name=seaweedfs-filer"
-      - "wud.link.template=https://github.com/seaweedfs/seaweedfs/pkgs/container/seaweedfs"
     networks:
       - traefik
       - postgres_network
@@ -86,11 +68,6 @@ services:
       -adminPassword=${SEAWEED_ADMIN_PASSWORD}
       -dataDir="/var/lib/seaweedfs-admin"
     labels:
-      - "wud.watch=true"
-      - "wud.watch.digest=true"
-      - "wud.tag.include=^latest$$"
-      - "wud.display.name=seaweedfs-admin"
-      - "wud.link.template=https://github.com/seaweedfs/seaweedfs/pkgs/container/seaweedfs"
       - "traefik.enable=true"
       - "traefik.http.routers.seaweed-admin.rule=Host(`storage.cacic.com.br`)"
       - "traefik.http.routers.seaweed-admin.entrypoints=web, websecure"
@@ -123,11 +100,6 @@ services:
       -metricsPort=9327
       -config=/etc/seaweed/s3_config.json
     labels:
-      - "wud.watch=true"
-      - "wud.watch.digest=true"
-      - "wud.tag.include=^latest$$"
-      - "wud.display.name=seaweedfs-s3"
-      - "wud.link.template=https://github.com/seaweedfs/seaweedfs/pkgs/container/seaweedfs"
       - "traefik.enable=true"
       - "traefik.http.routers.seaweed-s3.rule=Host(`s3.cacic.com.br`)"
       - "traefik.http.routers.seaweed-s3.entrypoints=web, websecure"

@@ -39,7 +39,6 @@ compose_data_directories:
   - unleash/postgres_data
   - uptime-kuma/data
   - vaultwarden
-  - wud/store
 
 compose_data_files:
   - path: crowdsec/var/log/auth.log

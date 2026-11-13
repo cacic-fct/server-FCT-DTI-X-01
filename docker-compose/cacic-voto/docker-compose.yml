@@ -47,7 +47,6 @@ services:
         condition: service_healthy
     restart: "no"
     labels:
-      - "wud.watch=false"
       - "traefik.enable=false"
 
   cacic-voto-backend:
@@ -71,14 +70,6 @@ services:
         condition: service_healthy
     restart: unless-stopped
     labels:
-      - "wud.watch=true"
-      - "wud.watch.digest=true"
-      - "wud.tag.include=^latest$$"
-      - "wud.trigger.include=docker.cacicvoto"
-      # Backend updates must go through Compose so migrations run first.
-      - "wud.trigger.exclude=docker.cacicvoto"
-      - "wud.display.name=cacic-voto-backend"
-      - "wud.link.template=https://github.com/cacic-fct/voto/pkgs/container/voto%2Fbackend"
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
       - "traefik.http.routers.cacic-voto-api.entrypoints=web,websecure"
@@ -102,12 +93,6 @@ services:
         condition: service_started
     restart: unless-stopped
     labels:
-      - "wud.watch=true"
-      - "wud.watch.digest=true"
-      - "wud.tag.include=^latest$$"
-      - "wud.trigger.include=docker.cacicvoto"
-      - "wud.display.name=cacic-voto-frontend"
-      - "wud.link.template=https://github.com/cacic-fct/voto/pkgs/container/voto%2Ffrontend"
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
       - "traefik.http.routers.cacic-voto-frontend.entrypoints=web,websecure"

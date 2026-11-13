@@ -39,9 +39,7 @@ services:
     #   - "8000:8000"
     env_file:
       - secrets.env
-    environment:
-      <<: *default-environment
-      SERVER_ROLE: worker
+    environment: *default-environment
     restart: unless-stopped
     volumes:
       - /home/shared/docker-data/glitchtip/uploads:/code/uploads

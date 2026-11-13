@@ -29,7 +29,6 @@ compose_projects:
   - umami-analytics
   - unleash
   - vaultwarden
-  - wud-updater
 
 compose_pull_before_up: true
 # One image at a time avoids competing HDD writes and decompression on two cores.
@@ -82,3 +81,4 @@ compose_secret_overlay_exclude_patterns:
 compose_retired_paths:
   - cacic-fctapp
   - cacic-fctapp-byebye
+  - wud-updater

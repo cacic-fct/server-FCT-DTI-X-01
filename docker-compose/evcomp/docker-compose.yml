@@ -43,11 +43,6 @@ services:
         condition: service_healthy
     networks:
       - default
-    labels:
-      - "wud.watch=true"
-      - "wud.watch.digest=true"
-      - "wud.tag.include=^latest$$"
-      - "wud.display.name=evcomp-api"
 
   evcomp-frontend:
     image: ghcr.io/fct-devs/evcomp-front/frontend:${IMAGE_TAG:-latest}
@@ -63,10 +58,6 @@ services:
       - default
       - traefik
     labels:
-      - "wud.watch=true"
-      - "wud.watch.digest=true"
-      - "wud.tag.include=^latest$$"
-      - "wud.display.name=evcomp-frontend"
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
       - "traefik.http.routers.evcomp.entrypoints=web,websecure"

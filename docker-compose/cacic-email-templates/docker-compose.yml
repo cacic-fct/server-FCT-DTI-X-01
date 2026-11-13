@@ -5,12 +5,6 @@ services:
     networks:
       - traefik
     labels:
-      - "wud.watch=true"
-      - "wud.watch.digest=true"
-      - "wud.tag.include=^main$$"
-      - "wud.trigger.include=docker.emailtemplates"
-      - "wud.display.name=cacic-email-templates"
-      - "wud.link.template=https://github.com/cacic-fct/email-templates/pkgs/container/email-templates"
       # Traefik - Proxy
       - "traefik.enable=true"
       # Router
